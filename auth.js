@@ -1,15 +1,14 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const ADMIN_USER = process.env.ADMIN_USER;
-const ADMIN_PASS = process.env.ADMIN_PASS;
+// ЖЕСТКО ЗАШИТЫЕ ДАННЫЕ (из .env или напрямую)
+const JWT_SECRET = process.env.JWT_SECRET || '9vR#4mX!qP7@Lk2$Nz8^Df5&Ha1*Cs6Wu3Ye0BgTx';
+const ADMIN_USER = process.env.ADMIN_USER || 'dbsvc_A9xR7QmL4VpN82';
+const ADMIN_PASS = process.env.ADMIN_PASS || 'Y#8vQ!2mL@7xP$4rN^9kW&5cT*1zHf6JbXs';
 
-// Хеширование пароля
 const salt = bcrypt.genSaltSync(10);
 const hash = bcrypt.hashSync(ADMIN_PASS, salt);
 
-// Логин
 function login(username, password) {
     if (username === ADMIN_USER && bcrypt.compareSync(password, hash)) {
         return jwt.sign(
@@ -21,7 +20,6 @@ function login(username, password) {
     return null;
 }
 
-// Проверка токена
 function verifyToken(token) {
     try {
         return jwt.verify(token, JWT_SECRET);
@@ -30,7 +28,6 @@ function verifyToken(token) {
     }
 }
 
-// Middleware для защиты роутов
 function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
