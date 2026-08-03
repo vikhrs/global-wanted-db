@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Global Wanted Database</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="login">
+        <h1>🔐 Вход в систему</h1>
+        <input id="username" placeholder="Логин">
+        <input id="password" type="password" placeholder="Пароль">
+        <button onclick="login()">Войти</button>
+    </div>
+    
+    <div id="dashboard" style="display:none">
+        <h1>🌍 Global Wanted Database</h1>
+        <div class="header">
+            <span id="stats">Загрузка...</span>
+            <button onclick="logout()">Выйти</button>
+        </div>
+        
+        <div class="filters">
+            <input id="filterName" placeholder="Имя / Фамилия">
+            <input id="filterCountry" placeholder="Страна">
+            <input id="filterAgeMin" placeholder="Возраст от" type="number">
+            <input id="filterAgeMax" placeholder="Возраст до" type="number">
+            <select id="filterSex">
+                <option value="">Пол</option>
+                <option value="male">Мужской</option>
+                <option value="female">Женский</option>
+            </select>
+            <input id="filterStatus" placeholder="Статус">
+            <select id="filterSource">
+                <option value="">Источник</option>
+                <option value="FBI">FBI</option>
+                <option value="INTERPOL">INTERPOL</option>
+                <option value="US Marshals">US Marshals</option>
+                <option value="Europol">Europol</option>
+                <option value="МВД РФ">МВД РФ</option>
+            </select>
+            <button onclick="loadData()">🔍 Поиск</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
