@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: global-wanted-db
+    env: docker
+    repo: https://github.com/vikhrs/global-wanted-db
+    plan: free
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_USER
+        value: admin
+      - key: ADMIN_PASS
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      - key: PORT
+        value: 10000
+    healthCheckPath: /api/stats
