@@ -1,0 +1,42 @@
+const fs = require('fs-extra');
+const path = require('path');
+const { saveEncrypted } = require('../backend/encryptor');
+
+const DB_PATH = path.join(__dirname, '../backend/db', 'wanted.encrypted');
+
+async function initDatabase() {
+    console.log('🔧 Инициализация базы данных...');
+    
+    // Создаём папку если её нет
+    await fs.ensureDir(path.dirname(DB_PATH));
+    
+    // Проверяем, существует ли уже база
+    if (await fs.pathExists(DB_PATH)) {
+        console.log('⚠️ База данных уже существует. Пропускаем инициализацию.');
+        return;
+    }
+    
+    // Создаём пустую базу
+    const emptyDB = {
+        total: 0,
+        lastUpdate: new Date().toISOString(),
+        sources: {
+            fbi: 0,
+            interpol: 0,
+            marshals: 0,
+            europol: 0,
+            russia: 0
+        },
+        people: []
+    };
+    
+    saveEncrypted(DB_PATH, emptyDB);
+    console.log('✅ Пустая база данных создана и зашифрована.');
+}
+
+// Запускаем, если скрипт вызван напрямую
+if (require.main === module) {
+    initDatabase().catch(console.error);
+}
+
+module.exports = initDatabase;
