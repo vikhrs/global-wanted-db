@@ -1,0 +1,73 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0e17; color: #e0e6f0; padding: 20px; }
+
+#login {
+    max-width: 400px;
+    margin: 100px auto;
+    background: #141b2b;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(0,150,255,0.1);
+    border: 1px solid #1a2a4a;
+}
+
+#login h1 { text-align: center; color: #4af; margin-bottom: 30px; }
+#login input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    background: #0d1421;
+    border: 1px solid #1a2a4a;
+    border-radius: 6px;
+    color: #e0e6f0;
+    font-size: 16px;
+}
+#login button {
+    width: 100%;
+    padding: 14px;
+    background: #1a6aff;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+#login button:hover { background: #2a7aff; transform: scale(1.02); }
+
+#dashboard { max-width: 1400px; margin: 0 auto; }
+.header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
+.header button { padding: 10px 20px; background: #ff3b30; border: none; border-radius: 6px; color: white; cursor: pointer; }
+
+.filters {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    background: #141b2b; padding: 20px; border-radius: 10px;
+    margin: 20px 0;
+}
+.filters input, .filters select {
+    padding: 10px;
+    background: #0d1421;
+    border: 1px solid #1a2a4a;
+    border-radius: 6px;
+    color: #e0e6f0;
+    flex: 1;
+    min-width: 150px;
+}
+.filters button {
+    padding: 10px 30px;
+    background: #1a6aff;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#results { margin-top: 20px; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { background: #141b2b; padding: 12px; text-align: left; border-bottom: 2px solid #1a6aff; }
+td { padding: 10px; border-bottom: 1px solid #1a2a4a; }
+tr:hover { background: #141b2b; }
+
+#stats { padding: 15px; background: #0d1421; border-radius: 8px; margin-bottom: 10px; font-size: 14px; color: #8ab; }
