@@ -2,15 +2,15 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const cron = require('node-cron');
 const { authMiddleware } = require('./auth');
 const { loadEncrypted } = require('./encryptor');
 const { collectAllData } = require('./scraper');
-const cron = require('node-cron');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../frontend')));
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 const DB_PATH = path.join(__dirname, 'db', 'wanted.encrypted');
 
@@ -26,7 +26,7 @@ app.post('/api/login', (req, res) => {
 
 // Защищённый роут для получения данных
 app.get('/api/wanted', authMiddleware, (req, res) => {
-    const { country, name, ageMin, ageMax, sex, status, source } = req.query;
+    const { country, name, ageMin, ageMax, sex, status, source, limit = 1000 } = req.query;
     
     const data = loadEncrypted(DB_PATH);
     if (!data) {
@@ -35,11 +35,14 @@ app.get('/api/wanted', authMiddleware, (req, res) => {
     
     let list = data.people || [];
     
-    // Фильтрация
-    if (name) list = list.filter(p => 
-        p.firstName.toLowerCase().includes(name.toLowerCase()) ||
-        p.lastName.toLowerCase().includes(name.toLowerCase())
-    );
+    if (name) {
+        const search = name.toLowerCase();
+        list = list.filter(p => 
+            p.firstName.toLowerCase().includes(search) ||
+            p.lastName.toLowerCase().includes(search) ||
+            (p.patronymic && p.patronymic.toLowerCase().includes(search))
+        );
+    }
     if (country) list = list.filter(p => p.country.toLowerCase().includes(country.toLowerCase()));
     if (sex) list = list.filter(p => p.sex === sex);
     if (status) list = list.filter(p => p.status.toLowerCase().includes(status.toLowerCase()));
@@ -47,27 +50,44 @@ app.get('/api/wanted', authMiddleware, (req, res) => {
     if (ageMin) list = list.filter(p => p.age >= parseInt(ageMin));
     if (ageMax) list = list.filter(p => p.age <= parseInt(ageMax));
     
+    const total = list.length;
+    const limited = list.slice(0, parseInt(limit));
+    
     res.json({
-        total: list.length,
+        total,
+        limit: parseInt(limit),
         lastUpdate: data.lastUpdate,
         sources: data.sources,
-        people: list
+        people: limited
     });
 });
 
-// Автоматическое обновление каждые 5 минут
+// Статистика
+app.get('/api/stats', authMiddleware, (req, res) => {
+    const data = loadEncrypted(DB_PATH);
+    if (!data) {
+        return res.status(404).json({ error: 'База данных не найдена' });
+    }
+    
+    res.json({
+        total: data.total,
+        lastUpdate: data.lastUpdate,
+        sources: data.sources,
+        countries: [...new Set(data.people.map(p => p.country))].length
+    });
+});
+
+// Автообновление каждые 5 минут
 cron.schedule('*/5 * * * *', () => {
-    console.log('⏰ Плановое обновление базы данных...');
+    console.log('⏰ Плановое обновление...');
     collectAllData().catch(e => console.error('Ошибка обновления:', e));
 });
 
-// Запуск
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, async () => {
     console.log(`🌍 Global Wanted DB запущена на порту ${PORT}`);
-    console.log(`🔐 Авторизация: ${process.env.ADMIN_USER} / ${process.env.ADMIN_PASS}`);
-    console.log(`🔒 Шифрование: AES-256`);
-    
-    // Первичный сбор данных
+    console.log(`🔐 Логин: ${process.env.ADMIN_USER || 'dbsvc_A9xR7QmL4VpN82'}`);
+    console.log(`🔑 Пароль: ${process.env.ADMIN_PASS || 'Y#8vQ!2mL@7xP$4rN^9kW&5cT*1zHf6JbXs'}`);
+    console.log(`🔒 Шифрование: AES-256 включено`);
     await collectAllData();
 });
