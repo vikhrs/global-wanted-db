@@ -1,6 +1,10 @@
 let token = null;
 let currentPersonId = null;
 let isAdmin = false;
+let currentRole = 'user';
+
+// ===== СЕКРЕТНАЯ ССЫЛКА ДЛЯ АДМИНКИ =====
+const ADMIN_SECRET = '6b1d4f0e2a9c7e8d5f31b84a6c92e715/9f7c2a61d4e84b3ea8f1c9076b5d2e41';
 
 // ===== АВТОВХОД =====
 window.onload = function() {
@@ -21,8 +25,9 @@ async function checkAdmin() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
-        if (data.isAdmin) {
-            isAdmin = true;
+        isAdmin = data.isAdmin || false;
+        currentRole = data.role || 'user';
+        if (isAdmin) {
             document.getElementById('adminButton').style.display = 'block';
         }
     } catch {}
@@ -58,7 +63,10 @@ async function login() {
             document.getElementById('dashboard').style.display = 'block';
             errorMsg.style.display = 'none';
             loadData();
-            checkAdmin();
+            if (data.isAdmin) {
+                isAdmin = true;
+                document.getElementById('adminButton').style.display = 'block';
+            }
         } else {
             errorMsg.textContent = '❌ Invalid username or password';
             errorMsg.style.display = 'block';
@@ -110,7 +118,6 @@ async function loadData() {
 
         const data = await res.json();
 
-        // Исправленная статистика
         const total = data.total || 0;
         const sources = data.sources || {};
         const totalFromSources = Object.values(sources).reduce((a, b) => a + b, 0);
@@ -302,23 +309,28 @@ async function loadAdminData() {
         const data = await res.json();
         const tbody = document.getElementById('adminLogBody');
         tbody.innerHTML = '';
-        data.logs.forEach(log => {
+        data.logs.slice().reverse().forEach(log => {
+            const roleBadge = log.role === 'admin' ? '👑' : '👤';
             tbody.innerHTML += `<tr>
-                <td>${log.username}</td>
+                <td>${log.username} ${roleBadge}</td>
                 <td>${log.ip}</td>
                 <td>${log.country}</td>
                 <td>${new Date(log.time).toLocaleString()}</td>
+                <td>${(log.userAgent || '').substring(0, 30)}...</td>
             </tr>`;
         });
         
-        // Загрузка пользователей
         const usersRes = await fetch('/api/admin/users', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const users = await usersRes.json();
         const userList = document.getElementById('adminUserList');
         userList.innerHTML = users.map(u => 
-            `<div class="admin-user-item">${u.username} <button onclick="deleteUser('${u.username}')">❌</button></div>`
+            `<div class="admin-user-item">
+                ${u.username} 
+                ${u.role === 'admin' ? '👑' : '👤'} 
+                ${u.username !== 'ops_root_f7Qn2LmX' ? `<button onclick="deleteUser('${u.username}')">❌</button>` : '🔒'}
+            </div>`
         ).join('');
     } catch {}
 }
@@ -326,16 +338,24 @@ async function loadAdminData() {
 async function addUser() {
     const username = document.getElementById('adminNewUser').value;
     const password = document.getElementById('adminNewPass').value;
+    const role = document.getElementById('adminNewRole')?.value || 'user';
     if (!username || !password) return alert('Enter username and password');
     
-    await fetch('/api/admin/users', {
+    const res = await fetch('/api/admin/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password, role })
     });
-    document.getElementById('adminNewUser').value = '';
-    document.getElementById('adminNewPass').value = '';
-    loadAdminData();
+    
+    if (res.ok) {
+        document.getElementById('adminNewUser').value = '';
+        document.getElementById('adminNewPass').value = '';
+        loadAdminData();
+        alert('✅ User added successfully');
+    } else {
+        const err = await res.json();
+        alert('❌ ' + err.error);
+    }
 }
 
 async function deleteUser(username) {
@@ -357,6 +377,7 @@ function logout() {
     document.getElementById('username').value = '';
     document.getElementById('password').value = '';
     document.getElementById('errorMsg').style.display = 'none';
+    document.getElementById('adminButton').style.display = 'none';
 }
 
 // ===== ENTER ДЛЯ ВХОДА =====
