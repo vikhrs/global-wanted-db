@@ -4,6 +4,16 @@
       "username": "ops_root_f7Qn2LmX",
       "password": "kR8vQm2LxP7#Nd4!Ha9@Ts5$Wy1^Fg6CbJz3Xe0VuMn8Lp2KrQ5Dh7Yt",
       "role": "admin"
+    },
+    {
+      "username": "",
+      "password": "",
+      "role": "user"
+    },
+    {
+      "username": "",
+      "password": "",
+      "role": "user"
     }
   ]
 }
