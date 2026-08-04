@@ -5,7 +5,7 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
     background: #0a0e17;
     color: #e0e6f0;
     padding: 24px;
@@ -29,7 +29,6 @@ body {
     margin-bottom: 8px;
     font-size: 34px;
     font-weight: 700;
-    letter-spacing: -0.5px;
 }
 
 #login .subtitle {
@@ -48,18 +47,12 @@ body {
     border-radius: 12px;
     color: #e0e6f0;
     font-size: 18px;
-    transition: 0.3s;
 }
 
 #login input:focus {
     outline: none;
     border-color: #1a6aff;
     box-shadow: 0 0 0 4px rgba(26, 106, 255, 0.15);
-}
-
-#login input::placeholder {
-    color: #4a5a6a;
-    font-size: 16px;
 }
 
 #login button {
@@ -72,17 +65,11 @@ body {
     font-size: 20px;
     font-weight: 700;
     cursor: pointer;
-    transition: 0.3s;
     margin-top: 16px;
 }
 
 #login button:hover {
     background: #2a7aff;
-    transform: scale(1.02);
-}
-
-#login button:active {
-    transform: scale(0.98);
 }
 
 #errorMsg {
@@ -91,37 +78,6 @@ body {
     text-align: center;
     font-size: 16px;
     display: none;
-    font-weight: 500;
-}
-
-/* ===== ЯЗЫКИ ===== */
-.lang-select {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-bottom: 20px;
-}
-
-.lang-btn {
-    padding: 8px 18px;
-    background: #0d1421;
-    border: 1px solid #1a2a4a;
-    border-radius: 8px;
-    color: #e0e6f0;
-    cursor: pointer;
-    font-size: 15px;
-    font-weight: 600;
-    transition: 0.3s;
-}
-
-.lang-btn:hover {
-    background: #1a2a4a;
-    border-color: #1a6aff;
-}
-
-.lang-btn.active {
-    background: #1a6aff;
-    border-color: #1a6aff;
 }
 
 /* ===== ПАНЕЛЬ УПРАВЛЕНИЯ ===== */
@@ -146,7 +102,6 @@ body {
     font-size: 32px;
     font-weight: 700;
     color: #4af;
-    letter-spacing: -0.5px;
 }
 
 .header-right {
@@ -167,16 +122,13 @@ body {
     transition: 0.3s;
 }
 
-.header-right button:hover {
-    transform: scale(1.05);
-}
-
 .header-right .btn-add {
     background: #1a6aff;
 }
 
 .header-right .btn-add:hover {
     background: #2a7aff;
+    transform: scale(1.02);
 }
 
 .header-right .btn-logout {
@@ -185,6 +137,7 @@ body {
 
 .header-right .btn-logout:hover {
     background: #ff554a;
+    transform: scale(1.02);
 }
 
 /* ===== СТАТИСТИКА ===== */
@@ -193,10 +146,11 @@ body {
     background: #0d1421;
     border-radius: 12px;
     margin-bottom: 16px;
-    font-size: 16px;
+    font-size: 14px;
     color: #8ab;
     border: 1px solid #1a2a4a;
-    line-height: 1.6;
+    line-height: 1.8;
+    overflow-x: auto;
 }
 
 #stats strong {
@@ -225,24 +179,12 @@ body {
     font-size: 15px;
     flex: 1 1 160px;
     min-width: 140px;
-    transition: 0.3s;
 }
 
 .filters input:focus,
 .filters select:focus {
     outline: none;
     border-color: #1a6aff;
-    box-shadow: 0 0 0 3px rgba(26, 106, 255, 0.1);
-}
-
-.filters input::placeholder {
-    color: #4a5a6a;
-    font-size: 14px;
-}
-
-.filters select option {
-    background: #0d1421;
-    color: #e0e6f0;
 }
 
 .filters .btn-search {
@@ -254,15 +196,12 @@ body {
     font-weight: 700;
     font-size: 16px;
     cursor: pointer;
-    transition: 0.3s;
 }
 
 .filters .btn-search:hover {
     background: #2a7aff;
-    transform: scale(1.02);
 }
 
-/* ===== КНОПКА ОЧИСТКИ ===== */
 .filters .btn-clear {
     padding: 12px 24px;
     background: #ff6b35;
@@ -272,12 +211,10 @@ body {
     font-weight: 700;
     font-size: 16px;
     cursor: pointer;
-    transition: 0.3s;
 }
 
 .filters .btn-clear:hover {
     background: #ff7a45;
-    transform: scale(1.02);
 }
 
 /* ===== РЕЗУЛЬТАТЫ (ТАБЛИЦА) ===== */
@@ -306,10 +243,6 @@ th {
     font-weight: 700;
     font-size: 14px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    position: sticky;
-    top: 0;
-    z-index: 2;
 }
 
 td {
@@ -318,15 +251,10 @@ td {
     color: #d0d8e0;
     vertical-align: middle;
     cursor: pointer;
-    transition: 0.2s;
 }
 
 tr:hover td {
     background: #141b2b;
-}
-
-tr:last-child td {
-    border-bottom: none;
 }
 
 td img {
@@ -337,7 +265,6 @@ td img {
     border: 2px solid #1a6aff;
 }
 
-/* ===== ПУСТОЙ РЕЗУЛЬТАТ ===== */
 .empty {
     text-align: center;
     padding: 80px 20px;
@@ -345,7 +272,7 @@ td img {
     font-size: 18px;
 }
 
-/* ===== МОДАЛЬНЫЕ ОКНА ===== */
+/* ===== МОДАЛКИ ===== */
 #profileModal,
 #addModal {
     display: none;
@@ -371,17 +298,9 @@ td img {
     max-height: 92vh;
     overflow-y: auto;
     border: 1px solid #1a2a4a;
-    box-shadow: 0 8px 60px rgba(0, 0, 0, 0.7);
 }
 
-#profileModal > div h2,
-#addModal > div h2 {
-    font-size: 28px;
-    color: #4af;
-    margin-bottom: 20px;
-}
-
-/* ===== КАРТОЧКА ПРОФИЛЯ ===== */
+/* ===== КАРТОЧКА ===== */
 .profile-header {
     display: flex;
     gap: 30px;
@@ -419,11 +338,6 @@ td img {
     font-size: 22px;
     margin-top: 12px;
     color: #e0e6f0;
-}
-
-.profile-avatar p {
-    color: #6a7a8a;
-    font-size: 14px;
 }
 
 .profile-info {
@@ -482,7 +396,6 @@ td img {
     border-radius: 8px;
     margin-bottom: 6px;
     border: 1px solid #1a2a4a;
-    color: #d0d8e0;
 }
 
 .history-item {
@@ -528,7 +441,6 @@ td img {
     font-weight: 600;
     font-size: 15px;
     cursor: pointer;
-    transition: 0.3s;
 }
 
 .profile-actions .btn-close {
@@ -562,17 +474,6 @@ td img {
     font-size: 16px;
 }
 
-#addModal input:focus,
-#addModal select:focus {
-    outline: none;
-    border-color: #1a6aff;
-    box-shadow: 0 0 0 3px rgba(26, 106, 255, 0.1);
-}
-
-#addModal input::placeholder {
-    color: #4a5a6a;
-}
-
 #addModal .form-actions {
     display: flex;
     gap: 12px;
@@ -587,7 +488,6 @@ td img {
     font-weight: 700;
     font-size: 16px;
     cursor: pointer;
-    transition: 0.3s;
 }
 
 #addModal .form-actions .btn-submit {
@@ -595,169 +495,195 @@ td img {
     color: white;
 }
 
-#addModal .form-actions .btn-submit:hover {
-    background: #2a7aff;
-}
-
 #addModal .form-actions .btn-cancel {
     background: #333;
     color: white;
 }
 
-#addModal .form-actions .btn-cancel:hover {
-    background: #444;
+/* ===== АДМИН-ПАНЕЛЬ ===== */
+#adminPanel {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+#adminPanel > div {
+    background: #141b2b;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 1000px;
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    border: 1px solid #1a2a4a;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.admin-header h2 {
+    color: #4af;
+    font-size: 28px;
+}
+
+.btn-close-admin {
+    background: #ff3b30;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+#adminPanel table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+#adminPanel th {
+    background: #1a2a4a;
+    padding: 10px;
+    text-align: left;
+    color: #8ab;
+}
+
+#adminPanel td {
+    padding: 10px;
+    border-bottom: 1px solid #1a2a4a;
+}
+
+.admin-user-form {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+}
+
+.admin-user-form input,
+.admin-user-form select {
+    flex: 1;
+    padding: 10px;
+    background: #0d1421;
+    border: 1px solid #1a2a4a;
+    border-radius: 8px;
+    color: #e0e6f0;
+    min-width: 150px;
+}
+
+.btn-add-user {
+    padding: 10px 20px;
+    background: #1a6aff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.admin-user-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: #0d1421;
+    margin: 4px 0;
+    border-radius: 6px;
+    border: 1px solid #1a2a4a;
+}
+
+.admin-user-item button {
+    background: #ff3b30;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 2px 8px;
+    cursor: pointer;
+}
+
+/* ===== КНОПКА АДМИНА ===== */
+.admin-fab {
+    background: #ff3b30;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(255, 59, 48, 0.4);
+    transition: 0.3s;
+}
+
+.admin-fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 30px rgba(255, 59, 48, 0.6);
 }
 
 /* ===== АДАПТИВ ===== */
-@media (max-width: 1024px) {
-    .profile-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
 @media (max-width: 768px) {
     body {
         padding: 12px;
     }
-
     #login {
         margin: 40px auto;
         padding: 32px 24px;
     }
-
-    #login h1 {
-        font-size: 28px;
-    }
-
-    #login input {
-        font-size: 16px;
-        padding: 14px;
-    }
-
-    #login button {
-        font-size: 18px;
-        padding: 16px;
-    }
-
     .header h1 {
         font-size: 22px;
     }
-
     .header-right {
         width: 100%;
         justify-content: center;
     }
-
     .header-right button {
-        padding: 10px 16px;
-        font-size: 13px;
         flex: 1;
+        text-align: center;
     }
-
     .filters {
         flex-direction: column;
-        padding: 16px;
-        gap: 10px;
     }
-
     .filters input,
     .filters select {
-        flex: 1 1 100%;
         width: 100%;
         min-width: unset;
-        padding: 14px;
-        font-size: 16px;
     }
-
     .filters .btn-search,
     .filters .btn-clear {
         width: 100%;
-        padding: 14px;
-        font-size: 18px;
     }
-
-    #stats {
-        font-size: 14px;
-        padding: 14px 16px;
-    }
-
-    table {
-        font-size: 13px;
-        min-width: 500px;
-    }
-
-    th,
-    td {
-        padding: 10px 8px;
-    }
-
-    #profileModal > div,
-    #addModal > div {
-        padding: 24px 18px;
-        max-height: 95vh;
-    }
-
-    .profile-header {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-
     .profile-grid {
         grid-template-columns: 1fr;
     }
-
-    .profile-avatar {
-        flex: 0 0 120px;
-    }
-
-    .profile-avatar img,
-    .profile-avatar .avatar-placeholder {
-        width: 120px;
-        height: 120px;
-        font-size: 56px;
-    }
-
     .profile-actions {
         flex-direction: column;
     }
-
     .profile-actions button {
         width: 100%;
-        padding: 14px;
     }
-
-    #addModal .form-actions {
-        flex-direction: column;
+    #profileModal > div,
+    #addModal > div {
+        padding: 24px 18px;
     }
-
-    #addModal .form-actions button {
-        width: 100%;
+    #adminPanel > div {
+        padding: 20px;
     }
-}
-
-@media (max-width: 400px) {
-    #login {
-        padding: 24px 16px;
-        margin: 20px auto;
-    }
-
-    #login h1 {
-        font-size: 24px;
-    }
-
-    .header h1 {
-        font-size: 18px;
-    }
-
-    table {
-        font-size: 11px;
-        min-width: 400px;
-    }
-
-    th,
-    td {
-        padding: 6px 4px;
+    #stats {
+        font-size: 12px;
+        padding: 12px 14px;
+        line-height: 1.6;
     }
 }
 
@@ -783,8 +709,14 @@ td img {
 
 /* ===== АНИМАЦИИ ===== */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 #profileModal > div,
