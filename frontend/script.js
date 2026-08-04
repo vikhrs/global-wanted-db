@@ -1,27 +1,6 @@
 let token = null;
-let currentLang = localStorage.getItem('lang') || 'ru';
 let currentPersonId = null;
-
-// ===== ПЕРЕКЛЮЧЕНИЕ ЯЗЫКА =====
-async function setLang(lang) {
-    currentLang = lang;
-    localStorage.setItem('lang', lang);
-    const res = await fetch(`/api/locales/${lang}`);
-    const locale = await res.json();
-    applyLocale(locale);
-}
-
-function applyLocale(locale) {
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        const parts = key.split('.');
-        let value = locale;
-        for (const part of parts) {
-            value = value?.[part];
-        }
-        if (value) el.textContent = value;
-    });
-}
+let isAdmin = false;
 
 // ===== АВТОВХОД =====
 window.onload = function() {
@@ -31,14 +10,22 @@ window.onload = function() {
         document.getElementById('login').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
         loadData();
-        loadLocales();
+        checkAdmin();
     }
 };
 
-async function loadLocales() {
-    const res = await fetch(`/api/locales/${currentLang}`);
-    const locale = await res.json();
-    applyLocale(locale);
+// ===== ПРОВЕРКА АДМИНА =====
+async function checkAdmin() {
+    try {
+        const res = await fetch('/api/admin/check', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.isAdmin) {
+            isAdmin = true;
+            document.getElementById('adminButton').style.display = 'block';
+        }
+    } catch {}
 }
 
 // ===== ВХОД =====
@@ -50,7 +37,7 @@ async function login() {
     errorMsg.style.display = 'none';
 
     if (!username || !password) {
-        errorMsg.textContent = '❌ Введите логин и пароль';
+        errorMsg.textContent = '❌ Please enter username and password';
         errorMsg.style.display = 'block';
         return;
     }
@@ -71,15 +58,15 @@ async function login() {
             document.getElementById('dashboard').style.display = 'block';
             errorMsg.style.display = 'none';
             loadData();
-            loadLocales();
+            checkAdmin();
         } else {
-            errorMsg.textContent = '❌ Неверные логин или пароль';
+            errorMsg.textContent = '❌ Invalid username or password';
             errorMsg.style.display = 'block';
             document.getElementById('password').value = '';
             document.getElementById('password').focus();
         }
     } catch (e) {
-        errorMsg.textContent = '❌ Ошибка соединения с сервером';
+        errorMsg.textContent = '❌ Connection error';
         errorMsg.style.display = 'block';
     }
 }
@@ -116,61 +103,68 @@ async function loadData() {
         });
 
         if (res.status === 401) {
-            alert('Сессия истекла. Войдите снова.');
+            alert('Session expired. Please login again.');
             logout();
             return;
         }
 
         const data = await res.json();
 
+        // Исправленная статистика
+        const total = data.total || 0;
+        const sources = data.sources || {};
+        const totalFromSources = Object.values(sources).reduce((a, b) => a + b, 0);
+        const displayTotal = total > 0 ? total : totalFromSources;
+
         document.getElementById('stats').innerHTML = `
-            <strong>Всего:</strong> ${data.total || 0} &nbsp;|&nbsp;
-            <strong>Обновлено:</strong> ${data.lastUpdate ? new Date(data.lastUpdate).toLocaleString() : '—'} &nbsp;|&nbsp;
-            <strong>FBI:</strong> ${data.sources?.fbi || 0} &nbsp;|&nbsp;
-            <strong>INTERPOL:</strong> ${data.sources?.interpol || 0} &nbsp;|&nbsp;
-            <strong>Miami Jail:</strong> ${data.sources?.miamiJail || 0} &nbsp;|&nbsp;
-            <strong>Miami Sex:</strong> ${data.sources?.miamiSex || 0}
+            <strong>Total:</strong> ${displayTotal} &nbsp;|&nbsp;
+            <strong>Updated:</strong> ${data.lastUpdate ? new Date(data.lastUpdate).toLocaleString() : '—'} &nbsp;|&nbsp;
+            <strong>FBI:</strong> ${sources.fbi || 0} &nbsp;|&nbsp;
+            <strong>INTERPOL:</strong> ${sources.interpol || 0} &nbsp;|&nbsp;
+            <strong>Miami Jail:</strong> ${sources.miamiJail || 0} &nbsp;|&nbsp;
+            <strong>Miami Sex:</strong> ${sources.miamiSex || 0}
         `;
 
         const resultsDiv = document.getElementById('results');
 
         if (!data.people || data.people.length === 0) {
-            resultsDiv.innerHTML = `<div class="empty">🔍 Ничего не найдено</div>`;
+            resultsDiv.innerHTML = `<div class="empty">🔍 Nothing found</div>`;
             return;
         }
 
         let html = `<table>
             <thead>
                 <tr>
-                    <th>Имя</th>
-                    <th>Фамилия</th>
-                    <th>Дата рождения</th>
-                    <th>Страна</th>
-                    <th>Преступление</th>
-                    <th>Статус</th>
-                    <th>Источник</th>
-                    <th></th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>DOB</th>
+                    <th>Country</th>
+                    <th>Crime</th>
+                    <th>Status</th>
+                    <th>Source</th>
+                    <th>Photo</th>
                 </tr>
             </thead>
             <tbody>`;
 
         data.people.forEach(p => {
-            html += `<tr onclick="openProfile('${p.caseNumber || p.id}')">
+            const id = p.caseNumber || p.id || Math.random().toString(36);
+            html += `<tr onclick="openProfile('${id}')">
                 <td>${p.firstName || '-'}</td>
                 <td>${p.lastName || '-'}</td>
                 <td>${p.dob || '-'}</td>
                 <td>${p.country || '-'}</td>
-                <td>${p.crime || '-'}</td>
+                <td>${(p.crime || '').substring(0, 30)}${(p.crime || '').length > 30 ? '...' : ''}</td>
                 <td>${p.status || '-'}</td>
                 <td>${p.source || '-'}</td>
-                <td>${p.photo ? '<img src="'+p.photo+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #1a6aff;">' : '📷'}</td>
+                <td>${p.photo ? `<img src="${p.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #1a6aff;">` : '📷'}</td>
             </tr>`;
         });
 
         html += '</tbody></table>';
         resultsDiv.innerHTML = html;
     } catch (e) {
-        document.getElementById('results').innerHTML = `<div class="empty">❌ Ошибка загрузки данных</div>`;
+        document.getElementById('results').innerHTML = `<div class="empty">❌ Error loading data</div>`;
     }
 }
 
@@ -181,10 +175,15 @@ async function openProfile(id) {
         const res = await fetch(`/api/person/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        
+        if (!res.ok) {
+            throw new Error('Person not found');
+        }
+        
         const person = await res.json();
         showProfile(person);
     } catch (e) {
-        alert('Ошибка загрузки карточки');
+        alert('Error loading profile: ' + e.message);
     }
 }
 
@@ -201,35 +200,35 @@ function showProfile(person) {
             </div>
             <div class="profile-info">
                 <div class="profile-grid">
-                    <div class="profile-grid-item"><label>📅 Дата рождения</label><value>${person.dob || 'N/A'}</value></div>
-                    <div class="profile-grid-item"><label>🌍 Страна</label><value>${person.country || 'N/A'}</value></div>
-                    <div class="profile-grid-item"><label>📍 Адрес</label><value>${person.address || 'N/A'}</value></div>
-                    <div class="profile-grid-item"><label>🏙️ Город</label><value>${person.city || 'N/A'}</value></div>
-                    <div class="profile-grid-item"><label>📞 Телефон</label><value>${person.phone || 'N/A'}</value></div>
-                    <div class="profile-grid-item"><label>⚖️ Статус</label><value>${person.status || 'N/A'}</value></div>
-                    <div class="profile-grid-item"><label>📂 Категория</label><value>${person.crimeCategory || 'N/A'}</value></div>
-                    <div class="profile-grid-item"><label>💰 Награда</label><value>${person.reward || 'N/A'}</value></div>
+                    <div class="profile-grid-item"><label>📅 Date of Birth</label><value>${person.dob || 'N/A'}</value></div>
+                    <div class="profile-grid-item"><label>🌍 Country</label><value>${person.country || 'N/A'}</value></div>
+                    <div class="profile-grid-item"><label>📍 Address</label><value>${person.address || 'N/A'}</value></div>
+                    <div class="profile-grid-item"><label>🏙️ City</label><value>${person.city || 'N/A'}</value></div>
+                    <div class="profile-grid-item"><label>📞 Phone</label><value>${person.phone || 'N/A'}</value></div>
+                    <div class="profile-grid-item"><label>⚖️ Status</label><value>${person.status || 'N/A'}</value></div>
+                    <div class="profile-grid-item"><label>📂 Category</label><value>${person.crimeCategory || 'N/A'}</value></div>
+                    <div class="profile-grid-item"><label>💰 Reward</label><value>${person.reward || 'N/A'}</value></div>
                 </div>
             </div>
         </div>
         <div class="profile-section">
-            <h4>📜 Обвинения</h4>
-            <ul>${(person.charges || ['Нет данных']).map(c => `<li>${c}</li>`).join('')}</ul>
+            <h4>📜 Charges</h4>
+            <ul>${(person.charges || ['No data']).map(c => `<li>${c}</li>`).join('')}</ul>
         </div>
         ${person.history ? `
         <div class="profile-section">
-            <h4>📋 История судимостей</h4>
+            <h4>📋 Criminal History</h4>
             ${person.history.map(h => `
                 <div class="history-item">
                     <div class="crime-name">${h.crime || 'N/A'}</div>
-                    <div class="crime-details">Срок: ${h.sentence || 'N/A'} | ${h.from || ''} - ${h.to || ''} | ${h.released ? '<span class="released">✅ Освобождён</span>' : '<span class="not-released">🔒 Не освобождён</span>'}</div>
+                    <div class="crime-details">Sentence: ${h.sentence || 'N/A'} | ${h.from || ''} - ${h.to || ''} | ${h.released ? '<span class="released">✅ Released</span>' : '<span class="not-released">🔒 Not released</span>'}</div>
                 </div>
             `).join('')}
         </div>
         ` : ''}
         <div class="profile-actions">
-            <button onclick="closeProfile()" class="btn-close">Закрыть</button>
-            <button onclick="editPerson()" class="btn-edit">✏️ Редактировать</button>
+            <button onclick="closeProfile()" class="btn-close">Close</button>
+            <button onclick="editPerson()" class="btn-edit">✏️ Edit</button>
         </div>
     `;
     
@@ -263,7 +262,7 @@ async function addPerson() {
         status: document.getElementById('addStatus').value,
         sex: document.getElementById('addSex').value,
         charges: document.getElementById('addCharges').value.split(',').map(c => c.trim()),
-        source: 'Моя БД'
+        source: 'My DB'
     };
     
     try {
@@ -281,8 +280,72 @@ async function addPerson() {
             loadData();
         }
     } catch (e) {
-        alert('Ошибка добавления');
+        alert('Error adding person');
     }
+}
+
+// ===== АДМИН-ПАНЕЛЬ =====
+function openAdmin() {
+    document.getElementById('adminPanel').style.display = 'flex';
+    loadAdminData();
+}
+
+function closeAdmin() {
+    document.getElementById('adminPanel').style.display = 'none';
+}
+
+async function loadAdminData() {
+    try {
+        const res = await fetch('/api/admin/logs', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const tbody = document.getElementById('adminLogBody');
+        tbody.innerHTML = '';
+        data.logs.forEach(log => {
+            tbody.innerHTML += `<tr>
+                <td>${log.username}</td>
+                <td>${log.ip}</td>
+                <td>${log.country}</td>
+                <td>${new Date(log.time).toLocaleString()}</td>
+            </tr>`;
+        });
+        
+        // Загрузка пользователей
+        const usersRes = await fetch('/api/admin/users', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const users = await usersRes.json();
+        const userList = document.getElementById('adminUserList');
+        userList.innerHTML = users.map(u => 
+            `<div class="admin-user-item">${u.username} <button onclick="deleteUser('${u.username}')">❌</button></div>`
+        ).join('');
+    } catch {}
+}
+
+async function addUser() {
+    const username = document.getElementById('adminNewUser').value;
+    const password = document.getElementById('adminNewPass').value;
+    if (!username || !password) return alert('Enter username and password');
+    
+    await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ username, password })
+    });
+    document.getElementById('adminNewUser').value = '';
+    document.getElementById('adminNewPass').value = '';
+    loadAdminData();
+}
+
+async function deleteUser(username) {
+    if (!confirm(`Delete user ${username}?`)) return;
+    await fetch('/api/admin/users', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ username })
+    });
+    loadAdminData();
 }
 
 // ===== ВЫХОД =====
