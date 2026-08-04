@@ -2,34 +2,42 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <meta name="theme-color" content="#0a0e17">
+    <meta name="description" content="Global Wanted Database — полицейская база данных розыска">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="/favicon.ico">
     <title>Global Wanted Database</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <!-- ===== СТРАНИЦА ВХОДА ===== -->
     <div id="login">
-        <h1>🔐 <span data-i18n="login">Вход</span></h1>
-        <p class="subtitle" data-i18n="login_title">Global Wanted Database</p>
+        <h1>🔐 Вход</h1>
+        <p class="subtitle">Global Wanted Database</p>
         <div class="lang-select">
-            <button onclick="setLang('ru')" class="lang-btn">🇷🇺 RU</button>
-            <button onclick="setLang('en')" class="lang-btn">🇬🇧 EN</button>
+            <button onclick="setLang('ru')" class="lang-btn" id="langRu">🇷🇺 RU</button>
+            <button onclick="setLang('en')" class="lang-btn" id="langEn">🇬🇧 EN</button>
         </div>
-        <input id="username" type="text" placeholder="Логин">
-        <input id="password" type="password" placeholder="Пароль">
-        <button onclick="login()" data-i18n="login_btn">Войти</button>
+        <input id="username" type="text" placeholder="Логин" autocomplete="username">
+        <input id="password" type="password" placeholder="Пароль" autocomplete="current-password">
+        <button onclick="login()">Войти</button>
         <p id="errorMsg"></p>
     </div>
 
+    <!-- ===== ПАНЕЛЬ УПРАВЛЕНИЯ ===== -->
     <div id="dashboard" style="display:none">
         <div class="header">
-            <h1 id="pageTitle" data-i18n="title">🌍 Global Wanted Database</h1>
+            <h1>🌍 Global Wanted Database</h1>
             <div class="header-right">
                 <div class="lang-select">
                     <button onclick="setLang('ru')" class="lang-btn">🇷🇺</button>
                     <button onclick="setLang('en')" class="lang-btn">🇬🇧</button>
                 </div>
-                <button onclick="showAddPerson()" style="background:#1a6aff;padding:10px 20px;border:none;border-radius:8px;color:white;cursor:pointer;">➕ Добавить</button>
-                <button onclick="logout()" style="background:#ff3b30;padding:10px 20px;border:none;border-radius:8px;color:white;cursor:pointer;" data-i18n="logout">🚪 Выйти</button>
+                <button onclick="showAddPerson()" class="btn-add">➕ Добавить</button>
+                <button onclick="logout()" class="btn-logout">🚪 Выйти</button>
             </div>
         </div>
 
@@ -77,33 +85,34 @@
                 <option value="Europol">Europol</option>
                 <option value="Моя БД">Моя БД</option>
             </select>
-            <button onclick="loadData()" data-i18n="search">🔍 Поиск</button>
+            <button onclick="loadData()" class="btn-search">🔍 Поиск</button>
+            <button onclick="clearFilters()" class="btn-clear">🧹 Очистить</button>
         </div>
 
         <div id="results"></div>
     </div>
 
-    <!-- Модальное окно карточки -->
-    <div id="profileModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;">
-        <div style="background:#141b2b;border-radius:16px;padding:30px;max-width:800px;width:95%;max-height:90vh;overflow-y:auto;border:1px solid #1a2a4a;">
+    <!-- ===== МОДАЛЬНОЕ ОКНО КАРТОЧКИ ===== -->
+    <div id="profileModal" style="display:none;">
+        <div>
             <div id="profileContent"></div>
         </div>
     </div>
 
-    <!-- Модальное окно добавления -->
-    <div id="addModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;">
-        <div style="background:#141b2b;border-radius:16px;padding:30px;max-width:600px;width:95%;max-height:90vh;overflow-y:auto;border:1px solid #1a2a4a;">
+    <!-- ===== МОДАЛЬНОЕ ОКНО ДОБАВЛЕНИЯ ===== -->
+    <div id="addModal" style="display:none;">
+        <div>
             <h2>➕ Добавить человека</h2>
-            <input id="addFirstName" placeholder="Имя" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
-            <input id="addLastName" placeholder="Фамилия" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
-            <input id="addDob" type="date" placeholder="Дата рождения" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
-            <input id="addAddress" placeholder="Адрес" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
-            <input id="addCity" placeholder="Город" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
-            <input id="addCountry" placeholder="Страна" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
-            <input id="addPhone" placeholder="Телефон" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
-            <input id="addCrime" placeholder="Преступление" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
-            <input id="addCharges" placeholder="Статьи (через запятую)" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
-            <select id="addCategory" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
+            <input id="addFirstName" placeholder="Имя">
+            <input id="addLastName" placeholder="Фамилия">
+            <input id="addDob" type="date" placeholder="Дата рождения">
+            <input id="addAddress" placeholder="Адрес">
+            <input id="addCity" placeholder="Город">
+            <input id="addCountry" placeholder="Страна">
+            <input id="addPhone" placeholder="Телефон">
+            <input id="addCrime" placeholder="Преступление">
+            <input id="addCharges" placeholder="Статьи (через запятую)">
+            <select id="addCategory">
                 <option value="terrorism">Терроризм</option>
                 <option value="violent">Насильственные</option>
                 <option value="sexual">Сексуальные</option>
@@ -116,24 +125,24 @@
                 <option value="corruption">Коррупция</option>
                 <option value="no_crime">Без судимости</option>
             </select>
-            <select id="addStatus" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
+            <select id="addStatus">
                 <option value="active">В розыске</option>
                 <option value="captured">Задержан</option>
                 <option value="deceased">Умер</option>
                 <option value="located">Найден</option>
                 <option value="clean">Без судимости</option>
             </select>
-            <select id="addSex" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
+            <select id="addSex">
                 <option value="male">Мужской</option>
                 <option value="female">Женский</option>
             </select>
-            <div style="display:flex;gap:10px;margin-top:10px;">
-                <button onclick="addPerson()" style="flex:1;padding:12px;background:#1a6aff;border:none;border-radius:8px;color:white;cursor:pointer;">✅ Добавить</button>
-                <button onclick="closeAddPerson()" style="flex:1;padding:12px;background:#333;border:none;border-radius:8px;color:white;cursor:pointer;">❌ Отмена</button>
+            <div class="form-actions">
+                <button onclick="addPerson()" class="btn-submit">✅ Добавить</button>
+                <button onclick="closeAddPerson()" class="btn-cancel">❌ Отмена</button>
             </div>
         </div>
     </div>
 
     <script src="script.js"></script>
 </body>
-                                                  </html>
+</html>
