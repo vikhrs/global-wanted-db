@@ -3,10 +3,8 @@ let currentPersonId = null;
 let isAdmin = false;
 let currentRole = 'user';
 
-// ===== СЕКРЕТНАЯ ССЫЛКА ДЛЯ АДМИНКИ =====
 const ADMIN_SECRET = '6b1d4f0e2a9c7e8d5f31b84a6c92e715/9f7c2a61d4e84b3ea8f1c9076b5d2e41';
 
-// ===== АВТОВХОД =====
 window.onload = function() {
     const savedToken = localStorage.getItem('token');
     if (savedToken) {
@@ -18,7 +16,6 @@ window.onload = function() {
     }
 };
 
-// ===== ПРОВЕРКА АДМИНА =====
 async function checkAdmin() {
     try {
         const res = await fetch('/api/admin/check', {
@@ -33,7 +30,6 @@ async function checkAdmin() {
     } catch {}
 }
 
-// ===== ВХОД =====
 async function login() {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
@@ -79,7 +75,6 @@ async function login() {
     }
 }
 
-// ===== ОЧИСТКА ФИЛЬТРОВ =====
 function clearFilters() {
     document.getElementById('filterName').value = '';
     document.getElementById('filterCountry').value = '';
@@ -92,7 +87,6 @@ function clearFilters() {
     loadData();
 }
 
-// ===== ЗАГРУЗКА ДАННЫХ =====
 async function loadData() {
     const params = new URLSearchParams({
         name: document.getElementById('filterName').value,
@@ -120,16 +114,21 @@ async function loadData() {
 
         const total = data.total || 0;
         const sources = data.sources || {};
-        const totalFromSources = Object.values(sources).reduce((a, b) => a + b, 0);
-        const displayTotal = total > 0 ? total : totalFromSources;
 
         document.getElementById('stats').innerHTML = `
-            <strong>Total:</strong> ${displayTotal} &nbsp;|&nbsp;
+            <strong>Total:</strong> ${total} &nbsp;|&nbsp;
             <strong>Updated:</strong> ${data.lastUpdate ? new Date(data.lastUpdate).toLocaleString() : '—'} &nbsp;|&nbsp;
-            <strong>FBI:</strong> ${sources.fbi || 0} &nbsp;|&nbsp;
-            <strong>INTERPOL:</strong> ${sources.interpol || 0} &nbsp;|&nbsp;
-            <strong>Miami Jail:</strong> ${sources.miamiJail || 0} &nbsp;|&nbsp;
-            <strong>Miami Sex:</strong> ${sources.miamiSex || 0}
+            <strong>FBI:</strong> ${sources.FBI || 0} &nbsp;|&nbsp;
+            <strong>INTERPOL:</strong> ${sources.INTERPOL || 0} &nbsp;|&nbsp;
+            <strong>US Marshals:</strong> ${sources['US Marshals'] || 0} &nbsp;|&nbsp;
+            <strong>Europol:</strong> ${sources.Europol || 0} &nbsp;|&nbsp;
+            <strong>Miami Jail:</strong> ${sources['Miami-Dade Jail'] || 0} &nbsp;|&nbsp;
+            <strong>Miami Sex:</strong> ${sources['Miami-Dade Sex Offender Registry'] || 0} &nbsp;|&nbsp;
+            <strong>Miami Police:</strong> ${sources['Miami-Dade Police'] || 0} &nbsp;|&nbsp;
+            <strong>Detroit:</strong> ${sources['Detroit Police'] || 0} &nbsp;|&nbsp;
+            <strong>OffenderList:</strong> ${sources.OffenderList || 0} &nbsp;|&nbsp;
+            <strong>Mexico:</strong> ${sources['Mexico PGR'] || 0} &nbsp;|&nbsp;
+            <strong>My DB:</strong> ${sources['My DB'] || 0}
         `;
 
         const resultsDiv = document.getElementById('results');
@@ -175,18 +174,13 @@ async function loadData() {
     }
 }
 
-// ===== ОТКРЫТИЕ КАРТОЧКИ =====
 async function openProfile(id) {
     currentPersonId = id;
     try {
         const res = await fetch(`/api/person/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
-        if (!res.ok) {
-            throw new Error('Person not found');
-        }
-        
+        if (!res.ok) throw new Error('Person not found');
         const person = await res.json();
         showProfile(person);
     } catch (e) {
@@ -197,7 +191,6 @@ async function openProfile(id) {
 function showProfile(person) {
     const modal = document.getElementById('profileModal');
     const content = document.getElementById('profileContent');
-    
     content.innerHTML = `
         <div class="profile-header">
             <div class="profile-avatar">
@@ -238,7 +231,6 @@ function showProfile(person) {
             <button onclick="editPerson()" class="btn-edit">✏️ Edit</button>
         </div>
     `;
-    
     modal.style.display = 'flex';
 }
 
@@ -246,7 +238,6 @@ function closeProfile() {
     document.getElementById('profileModal').style.display = 'none';
 }
 
-// ===== ДОБАВЛЕНИЕ =====
 function showAddPerson() {
     document.getElementById('addModal').style.display = 'flex';
 }
@@ -271,14 +262,10 @@ async function addPerson() {
         charges: document.getElementById('addCharges').value.split(',').map(c => c.trim()),
         source: 'My DB'
     };
-    
     try {
         const res = await fetch('/api/person', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify(person)
         });
         const data = await res.json();
@@ -291,7 +278,6 @@ async function addPerson() {
     }
 }
 
-// ===== АДМИН-ПАНЕЛЬ =====
 function openAdmin() {
     document.getElementById('adminPanel').style.display = 'flex';
     loadAdminData();
@@ -319,7 +305,6 @@ async function loadAdminData() {
                 <td>${(log.userAgent || '').substring(0, 30)}...</td>
             </tr>`;
         });
-        
         const usersRes = await fetch('/api/admin/users', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -327,8 +312,7 @@ async function loadAdminData() {
         const userList = document.getElementById('adminUserList');
         userList.innerHTML = users.map(u => 
             `<div class="admin-user-item">
-                ${u.username} 
-                ${u.role === 'admin' ? '👑' : '👤'} 
+                ${u.username} ${u.role === 'admin' ? '👑' : '👤'} 
                 ${u.username !== 'ops_root_f7Qn2LmX' ? `<button onclick="deleteUser('${u.username}')">❌</button>` : '🔒'}
             </div>`
         ).join('');
@@ -338,15 +322,13 @@ async function loadAdminData() {
 async function addUser() {
     const username = document.getElementById('adminNewUser').value;
     const password = document.getElementById('adminNewPass').value;
-    const role = document.getElementById('adminNewRole')?.value || 'user';
+    const role = document.getElementById('adminNewRole').value || 'user';
     if (!username || !password) return alert('Enter username and password');
-    
     const res = await fetch('/api/admin/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ username, password, role })
     });
-    
     if (res.ok) {
         document.getElementById('adminNewUser').value = '';
         document.getElementById('adminNewPass').value = '';
@@ -368,7 +350,6 @@ async function deleteUser(username) {
     loadAdminData();
 }
 
-// ===== ВЫХОД =====
 function logout() {
     token = null;
     localStorage.removeItem('token');
@@ -380,7 +361,6 @@ function logout() {
     document.getElementById('adminButton').style.display = 'none';
 }
 
-// ===== ENTER ДЛЯ ВХОДА =====
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
         const loginDiv = document.getElementById('login');
