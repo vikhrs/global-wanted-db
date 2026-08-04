@@ -1,13 +1,11 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <meta name="theme-color" content="#0a0e17">
-    <meta name="description" content="Global Wanted Database — полицейская база данных розыска">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" href="/favicon.ico">
     <title>Global Wanted Database</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -15,15 +13,11 @@
 
     <!-- ===== СТРАНИЦА ВХОДА ===== -->
     <div id="login">
-        <h1>🔐 Вход</h1>
+        <h1>🔐 Login</h1>
         <p class="subtitle">Global Wanted Database</p>
-        <div class="lang-select">
-            <button onclick="setLang('ru')" class="lang-btn" id="langRu">🇷🇺 RU</button>
-            <button onclick="setLang('en')" class="lang-btn" id="langEn">🇬🇧 EN</button>
-        </div>
-        <input id="username" type="text" placeholder="Логин" autocomplete="username">
-        <input id="password" type="password" placeholder="Пароль" autocomplete="current-password">
-        <button onclick="login()">Войти</button>
+        <input id="username" type="text" placeholder="Username" autocomplete="username">
+        <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+        <button onclick="login()">Login</button>
         <p id="errorMsg"></p>
     </div>
 
@@ -32,61 +26,57 @@
         <div class="header">
             <h1>🌍 Global Wanted Database</h1>
             <div class="header-right">
-                <div class="lang-select">
-                    <button onclick="setLang('ru')" class="lang-btn">🇷🇺</button>
-                    <button onclick="setLang('en')" class="lang-btn">🇬🇧</button>
-                </div>
-                <button onclick="showAddPerson()" class="btn-add">➕ Добавить</button>
-                <button onclick="logout()" class="btn-logout">🚪 Выйти</button>
+                <button onclick="showAddPerson()" class="btn-add">➕ Add Person</button>
+                <button onclick="logout()" class="btn-logout">🚪 Logout</button>
             </div>
         </div>
 
-        <div id="stats">Загрузка...</div>
+        <div id="stats">Loading...</div>
 
         <div class="filters">
-            <input id="filterName" placeholder="Имя / Фамилия">
-            <input id="filterCountry" placeholder="Страна">
-            <input id="filterAgeMin" placeholder="Возраст от" type="number">
-            <input id="filterAgeMax" placeholder="Возраст до" type="number">
+            <input id="filterName" placeholder="First / Last Name">
+            <input id="filterCountry" placeholder="Country">
+            <input id="filterAgeMin" placeholder="Age from" type="number">
+            <input id="filterAgeMax" placeholder="Age to" type="number">
             <select id="filterSex">
-                <option value="">Пол</option>
-                <option value="male">Мужской</option>
-                <option value="female">Женский</option>
+                <option value="">Sex</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
             </select>
             <select id="filterCategory">
-                <option value="">Категория</option>
-                <option value="terrorism">Терроризм</option>
-                <option value="violent">Насильственные</option>
-                <option value="sexual">Сексуальные</option>
-                <option value="cyber">Кибер</option>
-                <option value="financial">Финансовые</option>
-                <option value="organized">Орг. преступность</option>
-                <option value="drug">Наркотики</option>
-                <option value="kidnapping">Похищения</option>
-                <option value="missing">Пропавшие</option>
-                <option value="corruption">Коррупция</option>
-                <option value="no_crime">Без судимости</option>
+                <option value="">Category</option>
+                <option value="terrorism">Terrorism</option>
+                <option value="violent">Violent</option>
+                <option value="sexual">Sexual</option>
+                <option value="cyber">Cyber</option>
+                <option value="financial">Financial</option>
+                <option value="organized">Organized Crime</option>
+                <option value="drug">Drug</option>
+                <option value="kidnapping">Kidnapping</option>
+                <option value="missing">Missing</option>
+                <option value="corruption">Corruption</option>
+                <option value="no_crime">Clean Record</option>
             </select>
             <select id="filterStatus">
-                <option value="">Статус</option>
-                <option value="active">В розыске</option>
-                <option value="captured">Задержан</option>
-                <option value="deceased">Умер</option>
-                <option value="located">Найден</option>
-                <option value="clean">Без судимости</option>
+                <option value="">Status</option>
+                <option value="active">Wanted</option>
+                <option value="captured">Captured</option>
+                <option value="deceased">Deceased</option>
+                <option value="located">Located</option>
+                <option value="clean">Clean Record</option>
             </select>
             <select id="filterSource">
-                <option value="">Источник</option>
+                <option value="">Source</option>
                 <option value="FBI">FBI</option>
                 <option value="INTERPOL">INTERPOL</option>
                 <option value="Miami-Dade Jail">Miami Jail</option>
                 <option value="Miami-Dade Sex Offender Registry">Miami Sex</option>
                 <option value="US Marshals">US Marshals</option>
                 <option value="Europol">Europol</option>
-                <option value="Моя БД">Моя БД</option>
+                <option value="My DB">My DB</option>
             </select>
-            <button onclick="loadData()" class="btn-search">🔍 Поиск</button>
-            <button onclick="clearFilters()" class="btn-clear">🧹 Очистить</button>
+            <button onclick="loadData()" class="btn-search">🔍 Search</button>
+            <button onclick="clearFilters()" class="btn-clear">🧹 Clear</button>
         </div>
 
         <div id="results"></div>
@@ -102,45 +92,82 @@
     <!-- ===== МОДАЛЬНОЕ ОКНО ДОБАВЛЕНИЯ ===== -->
     <div id="addModal" style="display:none;">
         <div>
-            <h2>➕ Добавить человека</h2>
-            <input id="addFirstName" placeholder="Имя">
-            <input id="addLastName" placeholder="Фамилия">
-            <input id="addDob" type="date" placeholder="Дата рождения">
-            <input id="addAddress" placeholder="Адрес">
-            <input id="addCity" placeholder="Город">
-            <input id="addCountry" placeholder="Страна">
-            <input id="addPhone" placeholder="Телефон">
-            <input id="addCrime" placeholder="Преступление">
-            <input id="addCharges" placeholder="Статьи (через запятую)">
+            <h2>➕ Add Person</h2>
+            <input id="addFirstName" placeholder="First Name">
+            <input id="addLastName" placeholder="Last Name">
+            <input id="addDob" type="date" placeholder="Date of Birth">
+            <input id="addAddress" placeholder="Address">
+            <input id="addCity" placeholder="City">
+            <input id="addCountry" placeholder="Country">
+            <input id="addPhone" placeholder="Phone">
+            <input id="addCrime" placeholder="Crime">
+            <input id="addCharges" placeholder="Charges (comma separated)">
             <select id="addCategory">
-                <option value="terrorism">Терроризм</option>
-                <option value="violent">Насильственные</option>
-                <option value="sexual">Сексуальные</option>
-                <option value="cyber">Кибер</option>
-                <option value="financial">Финансовые</option>
-                <option value="organized">Орг. преступность</option>
-                <option value="drug">Наркотики</option>
-                <option value="kidnapping">Похищения</option>
-                <option value="missing">Пропавшие</option>
-                <option value="corruption">Коррупция</option>
-                <option value="no_crime">Без судимости</option>
+                <option value="terrorism">Terrorism</option>
+                <option value="violent">Violent</option>
+                <option value="sexual">Sexual</option>
+                <option value="cyber">Cyber</option>
+                <option value="financial">Financial</option>
+                <option value="organized">Organized Crime</option>
+                <option value="drug">Drug</option>
+                <option value="kidnapping">Kidnapping</option>
+                <option value="missing">Missing</option>
+                <option value="corruption">Corruption</option>
+                <option value="no_crime">Clean Record</option>
             </select>
             <select id="addStatus">
-                <option value="active">В розыске</option>
-                <option value="captured">Задержан</option>
-                <option value="deceased">Умер</option>
-                <option value="located">Найден</option>
-                <option value="clean">Без судимости</option>
+                <option value="active">Wanted</option>
+                <option value="captured">Captured</option>
+                <option value="deceased">Deceased</option>
+                <option value="located">Located</option>
+                <option value="clean">Clean Record</option>
             </select>
             <select id="addSex">
-                <option value="male">Мужской</option>
-                <option value="female">Женский</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
             </select>
             <div class="form-actions">
-                <button onclick="addPerson()" class="btn-submit">✅ Добавить</button>
-                <button onclick="closeAddPerson()" class="btn-cancel">❌ Отмена</button>
+                <button onclick="addPerson()" class="btn-submit">✅ Add</button>
+                <button onclick="closeAddPerson()" class="btn-cancel">❌ Cancel</button>
             </div>
         </div>
+    </div>
+
+    <!-- ===== АДМИН-ПАНЕЛЬ (скрыта) ===== -->
+    <div id="adminPanel" style="display:none;">
+        <div class="admin-header">
+            <h2>🔐 Admin Panel</h2>
+            <button onclick="closeAdmin()" class="btn-close-admin">✖ Close</button>
+        </div>
+        <div id="adminContent">
+            <h3>📊 Login History</h3>
+            <table id="adminLogTable">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>IP Address</th>
+                        <th>Country</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody id="adminLogBody"></tbody>
+            </table>
+            <hr>
+            <h3>👥 Manage Users</h3>
+            <div class="admin-user-form">
+                <input id="adminNewUser" placeholder="New Username">
+                <input id="adminNewPass" placeholder="New Password" type="password">
+                <button onclick="addUser()" class="btn-add-user">➕ Add User</button>
+            </div>
+            <div id="adminUserList"></div>
+        </div>
+    </div>
+
+    <!-- ===== КНОПКА АДМИН-ПАНЕЛИ (видна только админу) ===== -->
+    <div id="adminButton" style="display:none;position:fixed;bottom:20px;right:20px;z-index:999;">
+        <button onclick="openAdmin()" style="background:#ff3b30;color:white;border:none;border-radius:50%;width:60px;height:60px;font-size:28px;cursor:pointer;box-shadow:0 4px 20px rgba(255,59,48,0.4);">
+            🔐
+        </button>
     </div>
 
     <script src="script.js"></script>
