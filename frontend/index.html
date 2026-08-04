@@ -2,28 +2,38 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Global Wanted Database</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- СТРАНИЦА ВХОДА -->
     <div id="login">
-        <h1>🔐 Вход</h1>
-        <p class="subtitle">Global Wanted Database</p>
-        <input id="username" type="text" placeholder="Логин" autocomplete="username">
-        <input id="password" type="password" placeholder="Пароль" autocomplete="current-password">
-        <button onclick="login()">Войти</button>
-        <p id="errorMsg">❌ Неверные логин или пароль</p>
+        <h1>🔐 <span data-i18n="login">Вход</span></h1>
+        <p class="subtitle" data-i18n="login_title">Global Wanted Database</p>
+        <div class="lang-select">
+            <button onclick="setLang('ru')" class="lang-btn">🇷🇺 RU</button>
+            <button onclick="setLang('en')" class="lang-btn">🇬🇧 EN</button>
+        </div>
+        <input id="username" type="text" placeholder="Логин">
+        <input id="password" type="password" placeholder="Пароль">
+        <button onclick="login()" data-i18n="login_btn">Войти</button>
+        <p id="errorMsg"></p>
     </div>
 
-    <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
     <div id="dashboard" style="display:none">
-        <h1>🌍 Global Wanted Database</h1>
         <div class="header">
-            <span id="stats">Загрузка...</span>
-            <button onclick="logout()">🚪 Выйти</button>
+            <h1 id="pageTitle" data-i18n="title">🌍 Global Wanted Database</h1>
+            <div class="header-right">
+                <div class="lang-select">
+                    <button onclick="setLang('ru')" class="lang-btn">🇷🇺</button>
+                    <button onclick="setLang('en')" class="lang-btn">🇬🇧</button>
+                </div>
+                <button onclick="showAddPerson()" style="background:#1a6aff;padding:10px 20px;border:none;border-radius:8px;color:white;cursor:pointer;">➕ Добавить</button>
+                <button onclick="logout()" style="background:#ff3b30;padding:10px 20px;border:none;border-radius:8px;color:white;cursor:pointer;" data-i18n="logout">🚪 Выйти</button>
+            </div>
         </div>
+
+        <div id="stats">Загрузка...</div>
 
         <div class="filters">
             <input id="filterName" placeholder="Имя / Фамилия">
@@ -35,20 +45,95 @@
                 <option value="male">Мужской</option>
                 <option value="female">Женский</option>
             </select>
-            <input id="filterStatus" placeholder="Статус">
+            <select id="filterCategory">
+                <option value="">Категория</option>
+                <option value="terrorism">Терроризм</option>
+                <option value="violent">Насильственные</option>
+                <option value="sexual">Сексуальные</option>
+                <option value="cyber">Кибер</option>
+                <option value="financial">Финансовые</option>
+                <option value="organized">Орг. преступность</option>
+                <option value="drug">Наркотики</option>
+                <option value="kidnapping">Похищения</option>
+                <option value="missing">Пропавшие</option>
+                <option value="corruption">Коррупция</option>
+                <option value="no_crime">Без судимости</option>
+            </select>
+            <select id="filterStatus">
+                <option value="">Статус</option>
+                <option value="active">В розыске</option>
+                <option value="captured">Задержан</option>
+                <option value="deceased">Умер</option>
+                <option value="located">Найден</option>
+                <option value="clean">Без судимости</option>
+            </select>
             <select id="filterSource">
                 <option value="">Источник</option>
                 <option value="FBI">FBI</option>
                 <option value="INTERPOL">INTERPOL</option>
+                <option value="Miami-Dade Jail">Miami Jail</option>
+                <option value="Miami-Dade Sex Offender Registry">Miami Sex</option>
                 <option value="US Marshals">US Marshals</option>
                 <option value="Europol">Europol</option>
+                <option value="Моя БД">Моя БД</option>
             </select>
-            <button onclick="loadData()">🔍 Поиск</button>
+            <button onclick="loadData()" data-i18n="search">🔍 Поиск</button>
         </div>
 
         <div id="results"></div>
     </div>
 
+    <!-- Модальное окно карточки -->
+    <div id="profileModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;">
+        <div style="background:#141b2b;border-radius:16px;padding:30px;max-width:800px;width:95%;max-height:90vh;overflow-y:auto;border:1px solid #1a2a4a;">
+            <div id="profileContent"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления -->
+    <div id="addModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;">
+        <div style="background:#141b2b;border-radius:16px;padding:30px;max-width:600px;width:95%;max-height:90vh;overflow-y:auto;border:1px solid #1a2a4a;">
+            <h2>➕ Добавить человека</h2>
+            <input id="addFirstName" placeholder="Имя" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
+            <input id="addLastName" placeholder="Фамилия" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
+            <input id="addDob" type="date" placeholder="Дата рождения" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
+            <input id="addAddress" placeholder="Адрес" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
+            <input id="addCity" placeholder="Город" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
+            <input id="addCountry" placeholder="Страна" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
+            <input id="addPhone" placeholder="Телефон" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
+            <input id="addCrime" placeholder="Преступление" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
+            <input id="addCharges" placeholder="Статьи (через запятую)" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
+            <select id="addCategory" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
+                <option value="terrorism">Терроризм</option>
+                <option value="violent">Насильственные</option>
+                <option value="sexual">Сексуальные</option>
+                <option value="cyber">Кибер</option>
+                <option value="financial">Финансовые</option>
+                <option value="organized">Орг. преступность</option>
+                <option value="drug">Наркотики</option>
+                <option value="kidnapping">Похищения</option>
+                <option value="missing">Пропавшие</option>
+                <option value="corruption">Коррупция</option>
+                <option value="no_crime">Без судимости</option>
+            </select>
+            <select id="addStatus" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
+                <option value="active">В розыске</option>
+                <option value="captured">Задержан</option>
+                <option value="deceased">Умер</option>
+                <option value="located">Найден</option>
+                <option value="clean">Без судимости</option>
+            </select>
+            <select id="addSex" style="width:100%;padding:10px;margin:5px 0;background:#0d1421;border:1px solid #1a2a4a;border-radius:8px;color:white;">
+                <option value="male">Мужской</option>
+                <option value="female">Женский</option>
+            </select>
+            <div style="display:flex;gap:10px;margin-top:10px;">
+                <button onclick="addPerson()" style="flex:1;padding:12px;background:#1a6aff;border:none;border-radius:8px;color:white;cursor:pointer;">✅ Добавить</button>
+                <button onclick="closeAddPerson()" style="flex:1;padding:12px;background:#333;border:none;border-radius:8px;color:white;cursor:pointer;">❌ Отмена</button>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
-</html>
+                                                  </html>
