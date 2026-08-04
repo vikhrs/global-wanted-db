@@ -135,7 +135,7 @@ async function fetchEuropol() {
     }
 }
 
-// ===== ОСНОВНОЙ СБОР =====
+// ===== ОСНОВНОЙ СБОР (БЕЗ ДЕМО) =====
 async function collectAllData() {
     console.log('🔄 Начинается сбор данных...');
 
@@ -160,33 +160,28 @@ async function collectAllData() {
     allData.push(...europol);
     console.log(`✅ Europol: ${europol.length} записей`);
 
+    // Удаление дубликатов
     const unique = Array.from(
         new Map(allData.map(item =>
             [`${item.firstName}|${item.lastName}|${item.dob}|${item.country}`, item]
         )).values()
     );
 
-    let result;
-    if (unique.length === 0) {
-        console.log('⚠️ Нет данных из API. Загружаем демо-данные...');
-        const demo = require('./db/demo_data.json');
-        result = demo;
-    } else {
-        result = {
-            total: unique.length,
-            lastUpdate: new Date().toISOString(),
-            sources: {
-                fbi: allData.filter(d => d.source === 'FBI').length,
-                interpol: allData.filter(d => d.source === 'INTERPOL').length,
-                marshals: allData.filter(d => d.source === 'US Marshals').length,
-                europol: allData.filter(d => d.source === 'Europol').length
-            },
-            people: unique
-        };
-    }
+    const result = {
+        total: unique.length,
+        lastUpdate: new Date().toISOString(),
+        sources: {
+            fbi: allData.filter(d => d.source === 'FBI').length,
+            interpol: allData.filter(d => d.source === 'INTERPOL').length,
+            marshals: allData.filter(d => d.source === 'US Marshals').length,
+            europol: allData.filter(d => d.source === 'Europol').length
+        },
+        people: unique
+    };
 
     saveEncrypted(DB_PATH, result);
     console.log(`✅ База обновлена: ${result.total} записей`);
+    console.log(`📊 Источники: FBI=${result.sources.fbi}, INTERPOL=${result.sources.interpol}, Marshals=${result.sources.marshals}, Europol=${result.sources.europol}`);
 
     return result;
 }
