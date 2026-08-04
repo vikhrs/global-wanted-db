@@ -1,28 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Global Wanted Database</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- СТРАНИЦА ВХОДА -->
     <div id="login">
-        <h1>🔐 Вход в систему</h1>
-        <p style="color: #666; font-size: 12px; text-align: center; margin-bottom: 20px;">
-            Логин: <strong style="color: #4af;">dbsvc_A9xR7QmL4VpN82</strong><br>
-            Пароль: <strong style="color: #4af;">Y#8vQ!2mL@7xP$4rN^9kW&5cT*1zHf6JbXs</strong>
-        </p>
-        <input id="username" placeholder="Логин">
-        <input id="password" type="password" placeholder="Пароль">
+        <h1>🔐 Вход</h1>
+        <p class="subtitle">Global Wanted Database</p>
+        <input id="username" type="text" placeholder="Логин" autocomplete="username">
+        <input id="password" type="password" placeholder="Пароль" autocomplete="current-password">
         <button onclick="login()">Войти</button>
+        <p id="errorMsg">❌ Неверные логин или пароль</p>
     </div>
-    
+
+    <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
     <div id="dashboard" style="display:none">
         <h1>🌍 Global Wanted Database</h1>
         <div class="header">
             <span id="stats">Загрузка...</span>
-            <button onclick="logout()">Выйти</button>
+            <button onclick="logout()">🚪 Выйти</button>
         </div>
-        
+
         <div class="filters">
             <input id="filterName" placeholder="Имя / Фамилия">
             <input id="filterCountry" placeholder="Страна">
@@ -38,13 +40,15 @@
                 <option value="">Источник</option>
                 <option value="FBI">FBI</option>
                 <option value="INTERPOL">INTERPOL</option>
+                <option value="US Marshals">US Marshals</option>
+                <option value="Europol">Europol</option>
             </select>
             <button onclick="loadData()">🔍 Поиск</button>
         </div>
-        
+
         <div id="results"></div>
     </div>
-    
+
     <script src="script.js"></script>
 </body>
 </html>
