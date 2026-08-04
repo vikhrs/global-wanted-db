@@ -33,6 +33,16 @@ function initFiles() {
                     username: 'ops_root_f7Qn2LmX',
                     password: 'kR8vQm2LxP7#Nd4!Ha9@Ts5$Wy1^Fg6CbJz3Xe0VuMn8Lp2KrQ5Dh7Yt',
                     role: 'admin'
+                },
+                {
+                    username: 'user1',
+                    password: 'UserPass123!',
+                    role: 'user'
+                },
+                {
+                    username: 'detective_m',
+                    password: 'Miami2024#Secure',
+                    role: 'user'
                 }
             ]
         });
@@ -56,10 +66,16 @@ app.post('/api/login', (req, res) => {
                 ip: req.ip || req.connection.remoteAddress,
                 country: req.headers['cf-ipcountry'] || 'Unknown',
                 time: new Date().toISOString(),
-                userAgent: req.headers['user-agent'] || 'Unknown'
+                userAgent: req.headers['user-agent'] || 'Unknown',
+                role: user.role
             });
             fs.writeJSONSync(LOGS_PATH, logs);
-            return res.json({ success: true, token, isAdmin: user.role === 'admin' });
+            return res.json({ 
+                success: true, 
+                token, 
+                isAdmin: user.role === 'admin',
+                role: user.role
+            });
         }
     }
     res.status(401).json({ success: false, message: 'Invalid credentials' });
@@ -69,7 +85,10 @@ app.post('/api/login', (req, res) => {
 app.get('/api/admin/check', authMiddleware, (req, res) => {
     const users = fs.readJSONSync(USERS_PATH);
     const user = users.users.find(u => u.username === req.user.user);
-    res.json({ isAdmin: user?.role === 'admin' });
+    res.json({ 
+        isAdmin: user?.role === 'admin',
+        role: user?.role || 'user'
+    });
 });
 
 // ===== АДМИН-ЛОГИ =====
@@ -93,10 +112,16 @@ app.post('/api/admin/users', authMiddleware, (req, res) => {
     const users = fs.readJSONSync(USERS_PATH);
     const user = users.users.find(u => u.username === req.user.user);
     if (user?.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
-    const { username, password } = req.body;
-    users.users.push({ username, password, role: 'user' });
+    const { username, password, role = 'user' } = req.body;
+    
+    // Проверка на дубликат
+    if (users.users.find(u => u.username === username)) {
+        return res.status(400).json({ error: 'User already exists' });
+    }
+    
+    users.users.push({ username, password, role });
     fs.writeJSONSync(USERS_PATH, users);
-    res.json({ success: true });
+    res.json({ success: true, user: { username, role } });
 });
 
 app.delete('/api/admin/users', authMiddleware, (req, res) => {
