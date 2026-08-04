@@ -18,10 +18,8 @@ const DB_PATH = path.join(__dirname, 'db', 'wanted.encrypted');
 const LOGS_PATH = path.join(__dirname, 'db', 'admin_logs.json');
 const USERS_PATH = path.join(__dirname, 'db', 'users.json');
 
-// ===== СЕКРЕТНАЯ ССЫЛКА ДЛЯ АДМИНКИ =====
 const ADMIN_SECRET = '6b1d4f0e2a9c7e8d5f31b84a6c92e715/9f7c2a61d4e84b3ea8f1c9076b5d2e41';
 
-// ===== ИНИЦИАЛИЗАЦИЯ ФАЙЛОВ =====
 function initFiles() {
     if (!fs.existsSync(LOGS_PATH)) {
         fs.writeJSONSync(LOGS_PATH, { logs: [] });
@@ -33,16 +31,6 @@ function initFiles() {
                     username: 'ops_root_f7Qn2LmX',
                     password: 'kR8vQm2LxP7#Nd4!Ha9@Ts5$Wy1^Fg6CbJz3Xe0VuMn8Lp2KrQ5Dh7Yt',
                     role: 'admin'
-                },
-                {
-                    username: 'user1',
-                    password: 'UserPass123!',
-                    role: 'user'
-                },
-                {
-                    username: 'detective_m',
-                    password: 'Miami2024#Secure',
-                    role: 'user'
                 }
             ]
         });
@@ -50,7 +38,6 @@ function initFiles() {
 }
 initFiles();
 
-// ===== ВХОД =====
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     const users = fs.readJSONSync(USERS_PATH);
@@ -59,7 +46,6 @@ app.post('/api/login', (req, res) => {
     if (user) {
         const token = require('./auth').login(username, password);
         if (token) {
-            // Логируем вход
             const logs = fs.readJSONSync(LOGS_PATH);
             logs.logs.push({
                 username,
@@ -81,7 +67,6 @@ app.post('/api/login', (req, res) => {
     res.status(401).json({ success: false, message: 'Invalid credentials' });
 });
 
-// ===== ПРОВЕРКА АДМИНА =====
 app.get('/api/admin/check', authMiddleware, (req, res) => {
     const users = fs.readJSONSync(USERS_PATH);
     const user = users.users.find(u => u.username === req.user.user);
@@ -91,7 +76,6 @@ app.get('/api/admin/check', authMiddleware, (req, res) => {
     });
 });
 
-// ===== АДМИН-ЛОГИ =====
 app.get('/api/admin/logs', authMiddleware, (req, res) => {
     const users = fs.readJSONSync(USERS_PATH);
     const user = users.users.find(u => u.username === req.user.user);
@@ -100,7 +84,6 @@ app.get('/api/admin/logs', authMiddleware, (req, res) => {
     res.json(logs);
 });
 
-// ===== АДМИН-ПОЛЬЗОВАТЕЛИ =====
 app.get('/api/admin/users', authMiddleware, (req, res) => {
     const users = fs.readJSONSync(USERS_PATH);
     const user = users.users.find(u => u.username === req.user.user);
@@ -113,12 +96,9 @@ app.post('/api/admin/users', authMiddleware, (req, res) => {
     const user = users.users.find(u => u.username === req.user.user);
     if (user?.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
     const { username, password, role = 'user' } = req.body;
-    
-    // Проверка на дубликат
     if (users.users.find(u => u.username === username)) {
         return res.status(400).json({ error: 'User already exists' });
     }
-    
     users.users.push({ username, password, role });
     fs.writeJSONSync(USERS_PATH, users);
     res.json({ success: true, user: { username, role } });
@@ -137,7 +117,6 @@ app.delete('/api/admin/users', authMiddleware, (req, res) => {
     res.json({ success: true });
 });
 
-// ===== ОСНОВНЫЕ МАРШРУТЫ =====
 app.get('/api/wanted', authMiddleware, (req, res) => {
     const { country, name, ageMin, ageMax, sex, status, source, category, limit = 1000 } = req.query;
     const data = loadEncrypted(DB_PATH);
@@ -189,7 +168,20 @@ app.post('/api/person', authMiddleware, (req, res) => {
     res.json({ success: true, person: newPerson });
 });
 
-// ===== АВТООБНОВЛЕНИЕ =====
+app.get('/api/stats', authMiddleware, (req, res) => {
+    const data = loadEncrypted(DB_PATH);
+    if (!data) {
+        return res.status(404).json({ error: 'Database not found' });
+    }
+    res.json({
+        total: data.total || 0,
+        lastUpdate: data.lastUpdate,
+        sources: data.sources || {},
+        categories: [...new Set((data.people || []).map(p => p.crimeCategory))],
+        countries: [...new Set((data.people || []).map(p => p.country))].length
+    });
+});
+
 cron.schedule('0 */3 * * *', () => {
     console.log('⏰ Scheduled update (every 3 hours)...');
     collectAllData().catch(e => console.error('Update error:', e));
@@ -199,7 +191,6 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, async () => {
     console.log(`🌍 Global Wanted DB running on port ${PORT}`);
     console.log(`🔐 Admin login: ops_root_f7Qn2LmX`);
-    console.log(`🔑 Admin password: kR8vQm2LxP7#Nd4!Ha9@Ts5$Wy1^Fg6CbJz3Xe0VuMn8Lp2KrQ5Dh7Yt`);
     console.log(`🔗 Admin panel: /${ADMIN_SECRET}`);
     await collectAllData();
 });
