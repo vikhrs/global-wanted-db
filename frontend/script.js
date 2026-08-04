@@ -23,7 +23,7 @@ function applyLocale(locale) {
     });
 }
 
-// ===== ВХОД =====
+// ===== АВТОВХОД =====
 window.onload = function() {
     const savedToken = localStorage.getItem('token');
     if (savedToken) {
@@ -41,6 +41,7 @@ async function loadLocales() {
     applyLocale(locale);
 }
 
+// ===== ВХОД =====
 async function login() {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
@@ -83,6 +84,19 @@ async function login() {
     }
 }
 
+// ===== ОЧИСТКА ФИЛЬТРОВ =====
+function clearFilters() {
+    document.getElementById('filterName').value = '';
+    document.getElementById('filterCountry').value = '';
+    document.getElementById('filterAgeMin').value = '';
+    document.getElementById('filterAgeMax').value = '';
+    document.getElementById('filterSex').value = '';
+    document.getElementById('filterCategory').value = '';
+    document.getElementById('filterStatus').value = '';
+    document.getElementById('filterSource').value = '';
+    loadData();
+}
+
 // ===== ЗАГРУЗКА ДАННЫХ =====
 async function loadData() {
     const params = new URLSearchParams({
@@ -110,8 +124,8 @@ async function loadData() {
         const data = await res.json();
 
         document.getElementById('stats').innerHTML = `
-            <strong data-i18n="total">Всего:</strong> ${data.total || 0} &nbsp;|&nbsp;
-            <strong data-i18n="updated">Обновлено:</strong> ${data.lastUpdate ? new Date(data.lastUpdate).toLocaleString() : '—'} &nbsp;|&nbsp;
+            <strong>Всего:</strong> ${data.total || 0} &nbsp;|&nbsp;
+            <strong>Обновлено:</strong> ${data.lastUpdate ? new Date(data.lastUpdate).toLocaleString() : '—'} &nbsp;|&nbsp;
             <strong>FBI:</strong> ${data.sources?.fbi || 0} &nbsp;|&nbsp;
             <strong>INTERPOL:</strong> ${data.sources?.interpol || 0} &nbsp;|&nbsp;
             <strong>Miami Jail:</strong> ${data.sources?.miamiJail || 0} &nbsp;|&nbsp;
@@ -121,19 +135,20 @@ async function loadData() {
         const resultsDiv = document.getElementById('results');
 
         if (!data.people || data.people.length === 0) {
-            resultsDiv.innerHTML = `<div class="empty" data-i18n="errors.no_data">🔍 Ничего не найдено</div>`;
+            resultsDiv.innerHTML = `<div class="empty">🔍 Ничего не найдено</div>`;
             return;
         }
 
         let html = `<table>
             <thead>
                 <tr>
-                    <th data-i18n="profile.full_name">Имя</th>
-                    <th data-i18n="profile.dob">Дата рождения</th>
-                    <th data-i18n="profile.country">Страна</th>
-                    <th data-i18n="profile.crime">Преступление</th>
-                    <th data-i18n="profile.status">Статус</th>
-                    <th data-i18n="profile.source">Источник</th>
+                    <th>Имя</th>
+                    <th>Фамилия</th>
+                    <th>Дата рождения</th>
+                    <th>Страна</th>
+                    <th>Преступление</th>
+                    <th>Статус</th>
+                    <th>Источник</th>
                     <th></th>
                 </tr>
             </thead>
@@ -141,20 +156,21 @@ async function loadData() {
 
         data.people.forEach(p => {
             html += `<tr onclick="openProfile('${p.caseNumber || p.id}')">
-                <td>${p.firstName || '-'} ${p.lastName || ''}</td>
+                <td>${p.firstName || '-'}</td>
+                <td>${p.lastName || '-'}</td>
                 <td>${p.dob || '-'}</td>
                 <td>${p.country || '-'}</td>
                 <td>${p.crime || '-'}</td>
                 <td>${p.status || '-'}</td>
                 <td>${p.source || '-'}</td>
-                <td>${p.photo ? '<img src="'+p.photo+'" style="width:30px;height:30px;border-radius:50%;object-fit:cover;">' : '📷'}</td>
+                <td>${p.photo ? '<img src="'+p.photo+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #1a6aff;">' : '📷'}</td>
             </tr>`;
         });
 
         html += '</tbody></table>';
         resultsDiv.innerHTML = html;
     } catch (e) {
-        document.getElementById('results').innerHTML = `<div class="empty" data-i18n="errors.load_error">❌ Ошибка загрузки данных</div>`;
+        document.getElementById('results').innerHTML = `<div class="empty">❌ Ошибка загрузки данных</div>`;
     }
 }
 
@@ -177,43 +193,43 @@ function showProfile(person) {
     const content = document.getElementById('profileContent');
     
     content.innerHTML = `
-        <div style="display:flex;gap:20px;flex-wrap:wrap;">
-            <div style="flex:0 0 150px;text-align:center;">
-                ${person.photo ? `<img src="${person.photo}" style="width:150px;height:150px;border-radius:50%;object-fit:cover;border:3px solid #1a6aff;">` : '<div style="width:150px;height:150px;border-radius:50%;background:#1a2a4a;display:flex;align-items:center;justify-content:center;font-size:60px;color:#4af;">👤</div>'}
+        <div class="profile-header">
+            <div class="profile-avatar">
+                ${person.photo ? `<img src="${person.photo}" alt="${person.firstName}">` : `<div class="avatar-placeholder">👤</div>`}
                 <h3>${person.firstName || ''} ${person.lastName || ''}</h3>
-                <p style="color:#8ab;">${person.source || 'N/A'}</p>
+                <p>${person.source || 'N/A'}</p>
             </div>
-            <div style="flex:1;min-width:300px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <div><strong>📅 Дата рождения:</strong> ${person.dob || 'N/A'}</div>
-                    <div><strong>🌍 Страна:</strong> ${person.country || 'N/A'}</div>
-                    <div><strong>📍 Адрес:</strong> ${person.address || 'N/A'}</div>
-                    <div><strong>🏙️ Город:</strong> ${person.city || 'N/A'}</div>
-                    <div><strong>📞 Телефон:</strong> ${person.phone || 'N/A'}</div>
-                    <div><strong>⚖️ Статус:</strong> ${person.status || 'N/A'}</div>
-                    <div><strong>📂 Категория:</strong> ${person.crimeCategory || 'N/A'}</div>
-                    <div><strong>💰 Награда:</strong> ${person.reward || 'N/A'}</div>
+            <div class="profile-info">
+                <div class="profile-grid">
+                    <div class="profile-grid-item"><label>📅 Дата рождения</label><value>${person.dob || 'N/A'}</value></div>
+                    <div class="profile-grid-item"><label>🌍 Страна</label><value>${person.country || 'N/A'}</value></div>
+                    <div class="profile-grid-item"><label>📍 Адрес</label><value>${person.address || 'N/A'}</value></div>
+                    <div class="profile-grid-item"><label>🏙️ Город</label><value>${person.city || 'N/A'}</value></div>
+                    <div class="profile-grid-item"><label>📞 Телефон</label><value>${person.phone || 'N/A'}</value></div>
+                    <div class="profile-grid-item"><label>⚖️ Статус</label><value>${person.status || 'N/A'}</value></div>
+                    <div class="profile-grid-item"><label>📂 Категория</label><value>${person.crimeCategory || 'N/A'}</value></div>
+                    <div class="profile-grid-item"><label>💰 Награда</label><value>${person.reward || 'N/A'}</value></div>
                 </div>
-                <div style="margin-top:15px;border-top:1px solid #1a2a4a;padding-top:15px;">
-                    <strong>📜 Обвинения:</strong>
-                    <ul>${(person.charges || ['Нет данных']).map(c => `<li>${c}</li>`).join('')}</ul>
-                </div>
-                ${person.history ? `
-                <div style="margin-top:15px;border-top:1px solid #1a2a4a;padding-top:15px;">
-                    <strong>📋 История судимостей:</strong>
-                    ${person.history.map(h => `
-                        <div style="background:#0d1421;padding:10px;border-radius:8px;margin-top:5px;">
-                            <div>${h.crime || 'N/A'}</div>
-                            <div style="font-size:12px;color:#8ab;">Срок: ${h.sentence || 'N/A'} | ${h.from || ''} - ${h.to || ''} | ${h.released ? '✅ Освобождён' : '🔒 Не освобождён'}</div>
-                        </div>
-                    `).join('')}
-                </div>
-                ` : ''}
             </div>
         </div>
-        <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;">
-            <button onclick="closeProfile()" style="padding:10px 20px;background:#333;border:none;border-radius:8px;color:white;cursor:pointer;">Закрыть</button>
-            <button onclick="editPerson()" style="padding:10px 20px;background:#1a6aff;border:none;border-radius:8px;color:white;cursor:pointer;">✏️ Редактировать</button>
+        <div class="profile-section">
+            <h4>📜 Обвинения</h4>
+            <ul>${(person.charges || ['Нет данных']).map(c => `<li>${c}</li>`).join('')}</ul>
+        </div>
+        ${person.history ? `
+        <div class="profile-section">
+            <h4>📋 История судимостей</h4>
+            ${person.history.map(h => `
+                <div class="history-item">
+                    <div class="crime-name">${h.crime || 'N/A'}</div>
+                    <div class="crime-details">Срок: ${h.sentence || 'N/A'} | ${h.from || ''} - ${h.to || ''} | ${h.released ? '<span class="released">✅ Освобождён</span>' : '<span class="not-released">🔒 Не освобождён</span>'}</div>
+                </div>
+            `).join('')}
+        </div>
+        ` : ''}
+        <div class="profile-actions">
+            <button onclick="closeProfile()" class="btn-close">Закрыть</button>
+            <button onclick="editPerson()" class="btn-edit">✏️ Редактировать</button>
         </div>
     `;
     
@@ -224,10 +240,9 @@ function closeProfile() {
     document.getElementById('profileModal').style.display = 'none';
 }
 
-// ===== ДОБАВЛЕНИЕ ЧЕЛОВЕКА =====
+// ===== ДОБАВЛЕНИЕ =====
 function showAddPerson() {
-    const modal = document.getElementById('addModal');
-    modal.style.display = 'flex';
+    document.getElementById('addModal').style.display = 'flex';
 }
 
 function closeAddPerson() {
@@ -270,6 +285,7 @@ async function addPerson() {
     }
 }
 
+// ===== ВЫХОД =====
 function logout() {
     token = null;
     localStorage.removeItem('token');
@@ -280,6 +296,7 @@ function logout() {
     document.getElementById('errorMsg').style.display = 'none';
 }
 
+// ===== ENTER ДЛЯ ВХОДА =====
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
         const loginDiv = document.getElementById('login');
