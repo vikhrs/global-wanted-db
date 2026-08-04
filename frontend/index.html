@@ -11,7 +11,6 @@
 </head>
 <body>
 
-    <!-- ===== СТРАНИЦА ВХОДА ===== -->
     <div id="login">
         <h1>🔐 Login</h1>
         <p class="subtitle">Global Wanted Database</p>
@@ -21,7 +20,6 @@
         <p id="errorMsg"></p>
     </div>
 
-    <!-- ===== ПАНЕЛЬ УПРАВЛЕНИЯ ===== -->
     <div id="dashboard" style="display:none">
         <div class="header">
             <h1>🌍 Global Wanted Database</h1>
@@ -66,13 +64,17 @@
                 <option value="clean">Clean Record</option>
             </select>
             <select id="filterSource">
-                <option value="">Source</option>
+                <option value="">All Sources</option>
                 <option value="FBI">FBI</option>
                 <option value="INTERPOL">INTERPOL</option>
-                <option value="Miami-Dade Jail">Miami Jail</option>
-                <option value="Miami-Dade Sex Offender Registry">Miami Sex</option>
                 <option value="US Marshals">US Marshals</option>
                 <option value="Europol">Europol</option>
+                <option value="Miami-Dade Jail">Miami-Dade Jail</option>
+                <option value="Miami-Dade Sex Offender Registry">Miami Sex Offenders</option>
+                <option value="Miami-Dade Police">Miami-Dade Police</option>
+                <option value="Detroit Police">Detroit Police</option>
+                <option value="OffenderList">OffenderList</option>
+                <option value="Mexico PGR">Mexico PGR</option>
                 <option value="My DB">My DB</option>
             </select>
             <button onclick="loadData()" class="btn-search">🔍 Search</button>
@@ -82,14 +84,12 @@
         <div id="results"></div>
     </div>
 
-    <!-- ===== МОДАЛЬНОЕ ОКНО КАРТОЧКИ ===== -->
     <div id="profileModal" style="display:none;">
         <div>
             <div id="profileContent"></div>
         </div>
     </div>
 
-    <!-- ===== МОДАЛЬНОЕ ОКНО ДОБАВЛЕНИЯ ===== -->
     <div id="addModal" style="display:none;">
         <div>
             <h2>➕ Add Person</h2>
@@ -133,41 +133,49 @@
         </div>
     </div>
 
-    <!-- ===== АДМИН-ПАНЕЛЬ (скрыта) ===== -->
     <div id="adminPanel" style="display:none;">
-        <div class="admin-header">
-            <h2>🔐 Admin Panel</h2>
-            <button onclick="closeAdmin()" class="btn-close-admin">✖ Close</button>
-        </div>
-        <div id="adminContent">
-            <h3>📊 Login History</h3>
-            <table id="adminLogTable">
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>IP Address</th>
-                        <th>Country</th>
-                        <th>Time</th>
-                    </tr>
-                </thead>
-                <tbody id="adminLogBody"></tbody>
-            </table>
-            <hr>
-            <h3>👥 Manage Users</h3>
-            <div class="admin-user-form">
-                <input id="adminNewUser" placeholder="New Username">
-                <input id="adminNewPass" placeholder="New Password" type="password">
-                <button onclick="addUser()" class="btn-add-user">➕ Add User</button>
+        <div>
+            <div class="admin-header">
+                <h2>🔐 Admin Panel</h2>
+                <button onclick="closeAdmin()" class="btn-close-admin">✖ Close</button>
             </div>
-            <div id="adminUserList"></div>
+            <div id="adminContent">
+                <h3>📊 Login History</h3>
+                <table id="adminLogTable">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>IP Address</th>
+                            <th>Country</th>
+                            <th>Time</th>
+                            <th>User Agent</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminLogBody"></tbody>
+                </table>
+                <hr>
+                <h3>👥 Manage Users</h3>
+                <div class="admin-user-form">
+                    <input id="adminNewUser" placeholder="New Username">
+                    <input id="adminNewPass" placeholder="New Password" type="password">
+                    <select id="adminNewRole">
+                        <option value="user">👤 User (access to DB only)</option>
+                        <option value="admin">👑 Admin (full access)</option>
+                    </select>
+                    <button onclick="addUser()" class="btn-add-user">➕ Add User</button>
+                </div>
+                <div id="adminUserList"></div>
+                <hr>
+                <p style="color: #6a7a8a; font-size: 12px; margin-top: 10px;">
+                    👤 Users can only view database data<br>
+                    👑 Admins can manage users and view logs
+                </p>
+            </div>
         </div>
     </div>
 
-    <!-- ===== КНОПКА АДМИН-ПАНЕЛИ (видна только админу) ===== -->
     <div id="adminButton" style="display:none;position:fixed;bottom:20px;right:20px;z-index:999;">
-        <button onclick="openAdmin()" style="background:#ff3b30;color:white;border:none;border-radius:50%;width:60px;height:60px;font-size:28px;cursor:pointer;box-shadow:0 4px 20px rgba(255,59,48,0.4);">
-            🔐
-        </button>
+        <button onclick="openAdmin()" class="admin-fab">🔐</button>
     </div>
 
     <script src="script.js"></script>
