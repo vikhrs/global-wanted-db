@@ -5,13 +5,14 @@ const path = require('path');
 const DB_PATH = path.join(__dirname, 'db', 'wanted.encrypted');
 
 const HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    'Accept': 'application/json'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'application/json',
+    'Accept-Language': 'en-US,en;q=0.9'
 };
 
 function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
-// ===== FBI MOST WANTED (РЕАЛЬНЫЕ ДАННЫЕ) =====
+// ===== 1. FBI MOST WANTED =====
 async function fetchFBI() {
     try {
         const response = await axios.get('https://api.fbi.gov/wanted/v1/list', {
@@ -19,7 +20,6 @@ async function fetchFBI() {
             params: { pageSize: 200 },
             timeout: 15000
         });
-        console.log(`✅ FBI API доступен, получено ${response.data.items?.length || 0} записей`);
         return response.data.items.map(item => ({
             firstName: item.title ? item.title.split(' ')[0] : '',
             lastName: item.title ? item.title.split(' ').slice(1).join(' ') : '',
@@ -36,15 +36,17 @@ async function fetchFBI() {
             photo: item.images?.[0]?.original || null,
             charges: item.charges || [],
             classification: item.classification || '',
-            city: item.field_offices?.[0] || 'N/A'
+            city: item.field_offices?.[0] || 'N/A',
+            sourceUrl: 'https://api.fbi.gov/wanted/v1/list',
+            crimeCategory: 'other'
         }));
     } catch (error) {
-        console.error('❌ FBI API недоступен:', error.message);
+        console.error('❌ FBI API error:', error.message);
         return [];
     }
 }
 
-// ===== INTERPOL RED NOTICES (РЕАЛЬНЫЕ ДАННЫЕ) =====
+// ===== 2. INTERPOL RED NOTICES =====
 async function fetchInterpol() {
     try {
         const response = await axios.get('https://ws-public.interpol.int/notices/v1/red', {
@@ -53,11 +55,17 @@ async function fetchInterpol() {
             timeout: 15000
         });
         const notices = response.data._embedded?.notices || [];
-        console.log(`✅ INTERPOL API доступен, получено ${notices.length} записей`);
-        
         const result = [];
         for (const notice of notices) {
             let photos = [];
+            let details = {};
+            try {
+                const detailRes = await axios.get(
+                    `https://ws-public.interpol.int/notices/v1/red/${notice.entity_id}`,
+                    { headers: HEADERS, timeout: 10000 }
+                );
+                details = detailRes.data || {};
+            } catch {}
             try {
                 const photoRes = await axios.get(
                     `https://ws-public.interpol.int/notices/v1/red/${notice.entity_id}/images`,
@@ -65,7 +73,6 @@ async function fetchInterpol() {
                 );
                 photos = photoRes.data._embedded?.images || [];
             } catch {}
-            
             result.push({
                 firstName: notice.forename || '',
                 lastName: notice.name || '',
@@ -82,18 +89,94 @@ async function fetchInterpol() {
                 photo: photos.length > 0 ? photos[0]._links?.self?.href : null,
                 charges: notice.charge ? [notice.charge] : [],
                 classification: 'Red Notice',
-                city: 'N/A'
+                city: 'N/A',
+                sourceUrl: 'https://ws-public.interpol.int/notices/v1/red',
+                height: details.height || 'N/A',
+                weight: details.weight || 'N/A',
+                hairColor: details.hair_color || 'N/A',
+                eyeColor: details.eye_color || 'N/A',
+                crimeCategory: 'other'
             });
             await delay(300);
         }
         return result;
     } catch (error) {
-        console.error('❌ INTERPOL API недоступен:', error.message);
+        console.error('❌ INTERPOL API error:', error.message);
         return [];
     }
 }
 
-// ===== MIAMI-DADE JAIL (РЕАЛЬНЫЕ ДАННЫЕ) =====
+// ===== 3. US MARSHALS =====
+async function fetchUSMarshals() {
+    try {
+        const response = await axios.get('https://www.usmarshals.gov/assets/json/wanted.json', {
+            headers: HEADERS,
+            timeout: 15000
+        });
+        const data = response.data;
+        if (!Array.isArray(data)) return [];
+        return data.map(item => ({
+            firstName: item.name ? item.name.split(' ')[0] : '',
+            lastName: item.name ? item.name.split(' ').slice(1).join(' ') : '',
+            dob: item.dob || '',
+            address: item.location || 'N/A',
+            country: 'USA',
+            crime: item.charge || 'US Marshals Wanted',
+            status: 'US Marshals Most Wanted',
+            source: 'US Marshals',
+            sex: item.sex || 'unknown',
+            age: item.age || 0,
+            reward: item.reward || 'N/A',
+            caseNumber: item.case_number || 'N/A',
+            photo: item.photo || null,
+            charges: item.charge ? [item.charge] : [],
+            classification: '15 Most Wanted',
+            city: 'N/A',
+            sourceUrl: 'https://www.usmarshals.gov/assets/json/wanted.json',
+            crimeCategory: 'other'
+        }));
+    } catch (error) {
+        console.error('❌ US Marshals API error:', error.message);
+        return [];
+    }
+}
+
+// ===== 4. EUROPOL =====
+async function fetchEuropol() {
+    try {
+        const response = await axios.get('https://www.europol.europa.eu/api/wanted', {
+            headers: HEADERS,
+            timeout: 15000
+        });
+        const data = response.data;
+        if (!Array.isArray(data)) return [];
+        return data.map(item => ({
+            firstName: item.first_name || '',
+            lastName: item.last_name || '',
+            dob: item.dob || '',
+            address: item.last_location || 'N/A',
+            country: item.country || 'EU',
+            crime: item.charge || 'Europol Wanted',
+            status: 'Europol Most Wanted',
+            source: 'Europol',
+            sex: item.sex || 'unknown',
+            age: item.age || 0,
+            reward: item.reward || 'N/A',
+            caseNumber: item.case_number || 'N/A',
+            photo: item.photo || null,
+            charges: item.charge ? [item.charge] : [],
+            classification: 'EU Most Wanted',
+            city: 'N/A',
+            sourceUrl: 'https://www.europol.europa.eu/api/wanted',
+            crimeCategory: 'other'
+        }));
+    } catch (error) {
+        console.error('❌ Europol API error:', error.message);
+        return [];
+    }
+}
+
+// ===== 5. MIAMI-DADE JAIL =====
 async function fetchMiamiDadeJail() {
     try {
         const url = 'https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/ArcGIS/rest/services/miamidade_jail_data/FeatureServer/0/query';
@@ -109,8 +192,6 @@ async function fetchMiamiDadeJail() {
             timeout: 15000
         });
         const features = response.data.features || [];
-        console.log(`✅ Miami-Dade Jail API доступен, получено ${features.length} записей`);
-        
         return features.map(f => {
             const attrs = f.attributes || {};
             return {
@@ -131,16 +212,18 @@ async function fetchMiamiDadeJail() {
                 caseNumber: attrs.ObjectId?.toString() || 'N/A',
                 photo: null,
                 charges: [attrs.Charge1, attrs.Charge2, attrs.Charge3].filter(Boolean),
-                classification: 'Inmate'
+                classification: 'Inmate',
+                sourceUrl: 'https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/ArcGIS/rest/services/miamidade_jail_data/FeatureServer/0',
+                crimeCategory: 'other'
             };
         });
     } catch (error) {
-        console.error('❌ Miami-Dade Jail API недоступен:', error.message);
+        console.error('❌ Miami-Dade Jail API error:', error.message);
         return [];
     }
 }
 
-// ===== MIAMI-DADE SEX OFFENDERS (РЕАЛЬНЫЕ ДАННЫЕ) =====
+// ===== 6. MIAMI-DADE SEX OFFENDERS =====
 async function fetchMiamiSexOffenders() {
     try {
         const url = 'https://gis-mdc.opendata.arcgis.com/datasets/MDC::sexual-predator.geojson';
@@ -149,8 +232,6 @@ async function fetchMiamiSexOffenders() {
             timeout: 15000
         });
         const features = response.data.features || [];
-        console.log(`✅ Miami Sex Offenders API доступен, получено ${features.length} записей`);
-        
         return features.map(f => {
             const attrs = f.properties || {};
             return {
@@ -171,145 +252,200 @@ async function fetchMiamiSexOffenders() {
                 caseNumber: attrs.doc_nbr || 'N/A',
                 photo: attrs.image_id ? `https://gis-mdc.opendata.arcgis.com/images/${attrs.image_id}` : null,
                 charges: ['Sexual offense'],
-                classification: 'Sex Offender'
+                classification: 'Sex Offender',
+                sourceUrl: 'https://gis-mdc.opendata.arcgis.com/datasets/MDC::sexual-predator.geojson',
+                height: attrs.height || 'N/A',
+                weight: attrs.weight || 'N/A',
+                race: attrs.race || 'N/A',
+                crimeCategory: 'sexual'
             };
         });
     } catch (error) {
-        console.error('❌ Miami Sex Offenders API недоступен:', error.message);
+        console.error('❌ Miami Sex Offenders API error:', error.message);
         return [];
     }
 }
 
-// ===== US MARSHALS (РЕАЛЬНЫЕ ДАННЫЕ) =====
-async function fetchUSMarshals() {
+// ===== 7. DETROIT CRIME =====
+async function fetchDetroitCrime() {
     try {
-        const response = await axios.get('https://www.usmarshals.gov/assets/json/wanted.json', {
+        const url = 'https://services2.arcgis.com/qvkbeam7Wirps6zC/ArcGIS/rest/services/RMS_Crime_Incidents/FeatureServer/0/query';
+        const response = await axios.get(url, {
             headers: HEADERS,
+            params: {
+                where: '1=1',
+                outFields: 'offense_description,address,incident_date',
+                returnGeometry: false,
+                f: 'json',
+                resultRecordCount: 500
+            },
             timeout: 15000
         });
-        const data = response.data;
-        if (!Array.isArray(data)) return [];
-        console.log(`✅ US Marshals API доступен, получено ${data.length} записей`);
-        
-        return data.map(item => ({
-            firstName: item.name ? item.name.split(' ')[0] : '',
-            lastName: item.name ? item.name.split(' ').slice(1).join(' ') : '',
-            dob: item.dob || '',
-            address: item.location || 'N/A',
-            country: 'USA',
-            crime: item.charge || 'US Marshals Wanted',
-            status: 'US Marshals Most Wanted',
-            source: 'US Marshals',
-            sex: item.sex || 'unknown',
-            age: item.age || 0,
-            reward: item.reward || 'N/A',
-            caseNumber: item.case_number || 'N/A',
-            photo: item.photo || null,
-            charges: item.charge ? [item.charge] : [],
-            classification: '15 Most Wanted',
-            city: 'N/A'
-        }));
+        const features = response.data.features || [];
+        return features.map(f => {
+            const attrs = f.attributes || {};
+            return {
+                firstName: 'Unknown',
+                lastName: 'Unknown',
+                dob: '',
+                address: attrs.address || 'N/A',
+                city: 'Detroit',
+                state: 'MI',
+                zip: 'N/A',
+                country: 'USA',
+                crime: attrs.offense_description || 'Unknown crime',
+                status: 'Incident reported',
+                source: 'Detroit Police',
+                sex: 'unknown',
+                age: 0,
+                reward: 'N/A',
+                caseNumber: attrs.ObjectId?.toString() || 'N/A',
+                photo: null,
+                charges: [attrs.offense_description].filter(Boolean),
+                classification: 'Incident',
+                sourceUrl: 'https://services2.arcgis.com/qvkbeam7Wirps6zC/ArcGIS/rest/services/RMS_Crime_Incidents/FeatureServer/0',
+                crimeCategory: 'other'
+            };
+        });
     } catch (error) {
-        console.error('❌ US Marshals API недоступен:', error.message);
+        console.error('❌ Detroit Crime API error:', error.message);
         return [];
     }
 }
 
-// ===== EUROPOL (РЕАЛЬНЫЕ ДАННЫЕ) =====
-async function fetchEuropol() {
+// ===== 8. MIAMI-DADE POLICE (SRRR) =====
+async function fetchMiamiPolice() {
     try {
-        const response = await axios.get('https://www.europol.europa.eu/api/wanted', {
+        const url = 'https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/ArcGIS/rest/services/PCB_Report/FeatureServer/0/query';
+        const response = await axios.get(url, {
             headers: HEADERS,
+            params: {
+                where: '1=1',
+                outFields: 'District,Incident_Date,Employee_Race,Employee_Sex,Employee_Age,Subject_Race,Subject_Sex,Subject_Age,Case_Number',
+                returnGeometry: false,
+                f: 'json',
+                resultRecordCount: 500
+            },
             timeout: 15000
         });
-        const data = response.data;
-        if (!Array.isArray(data)) return [];
-        console.log(`✅ Europol API доступен, получено ${data.length} записей`);
-        
-        return data.map(item => ({
-            firstName: item.first_name || '',
-            lastName: item.last_name || '',
-            dob: item.dob || '',
-            address: item.last_location || 'N/A',
-            country: item.country || 'EU',
-            crime: item.charge || 'Europol Wanted',
-            status: 'Europol Most Wanted',
-            source: 'Europol',
-            sex: item.sex || 'unknown',
-            age: item.age || 0,
-            reward: item.reward || 'N/A',
-            caseNumber: item.case_number || 'N/A',
-            photo: item.photo || null,
-            charges: item.charge ? [item.charge] : [],
-            classification: 'EU Most Wanted',
-            city: 'N/A'
-        }));
+        const features = response.data.features || [];
+        return features.map(f => {
+            const attrs = f.attributes || {};
+            return {
+                firstName: 'Subject',
+                lastName: `Case ${attrs.Case_Number || 'N/A'}`,
+                dob: '',
+                address: 'N/A',
+                city: 'Miami',
+                state: 'FL',
+                zip: 'N/A',
+                country: 'USA',
+                crime: 'Police incident',
+                status: 'Reported',
+                source: 'Miami-Dade Police',
+                sex: attrs.Subject_Sex || 'unknown',
+                age: attrs.Subject_Age || 0,
+                reward: 'N/A',
+                caseNumber: attrs.Case_Number || 'N/A',
+                photo: null,
+                charges: ['Police incident'],
+                classification: 'Incident',
+                sourceUrl: 'https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/ArcGIS/rest/services/PCB_Report/FeatureServer/0',
+                race: attrs.Subject_Race || 'N/A',
+                employeeRace: attrs.Employee_Race || 'N/A',
+                employeeSex: attrs.Employee_Sex || 'N/A',
+                employeeAge: attrs.Employee_Age || 0,
+                district: attrs.District || 'N/A',
+                crimeCategory: 'other'
+            };
+        });
     } catch (error) {
-        console.error('❌ Europol API недоступен:', error.message);
+        console.error('❌ Miami Police API error:', error.message);
         return [];
     }
 }
 
-// ===== ОСНОВНОЙ СБОР (ТОЛЬКО РЕАЛЬНЫЕ API) =====
+// ===== ОСНОВНОЙ СБОР (БЕЗ ДЕМО) =====
 async function collectAllData() {
-    console.log('🔄 Начинается сбор РЕАЛЬНЫХ данных из API...');
+    console.log('🔄 Начинается сбор данных из API (БЕЗ ДЕМО)...');
 
     const allData = [];
 
     // FBI
     const fbi = await fetchFBI();
     allData.push(...fbi);
+    console.log(`✅ FBI: ${fbi.length} записей`);
     await delay(1000);
 
     // INTERPOL
     const interpol = await fetchInterpol();
     allData.push(...interpol);
-    await delay(1000);
-
-    // Miami-Dade Jail
-    const miamiJail = await fetchMiamiDadeJail();
-    allData.push(...miamiJail);
-    await delay(1000);
-
-    // Miami Sex Offenders
-    const miamiSex = await fetchMiamiSexOffenders();
-    allData.push(...miamiSex);
+    console.log(`✅ INTERPOL: ${interpol.length} записей`);
     await delay(1000);
 
     // US Marshals
     const marshals = await fetchUSMarshals();
     allData.push(...marshals);
+    console.log(`✅ US Marshals: ${marshals.length} записей`);
     await delay(1000);
 
     // Europol
     const europol = await fetchEuropol();
     allData.push(...europol);
+    console.log(`✅ Europol: ${europol.length} записей`);
+    await delay(1000);
 
-    // Удаление дубликатов по имени + дате + стране
+    // Miami-Dade Jail
+    const miamiJail = await fetchMiamiDadeJail();
+    allData.push(...miamiJail);
+    console.log(`✅ Miami-Dade Jail: ${miamiJail.length} записей`);
+    await delay(1000);
+
+    // Miami-Dade Sex Offenders
+    const miamiSex = await fetchMiamiSexOffenders();
+    allData.push(...miamiSex);
+    console.log(`✅ Miami-Dade Sex Offenders: ${miamiSex.length} записей`);
+    await delay(1000);
+
+    // Detroit Crime
+    const detroit = await fetchDetroitCrime();
+    allData.push(...detroit);
+    console.log(`✅ Detroit Crime: ${detroit.length} записей`);
+    await delay(1000);
+
+    // Miami-Dade Police
+    const miamiPolice = await fetchMiamiPolice();
+    allData.push(...miamiPolice);
+    console.log(`✅ Miami-Dade Police: ${miamiPolice.length} записей`);
+
+    // Удаление дубликатов
     const unique = Array.from(
         new Map(allData.map(item =>
             [`${item.firstName}|${item.lastName}|${item.dob}|${item.country}`, item]
         )).values()
     );
 
-    // Формируем результат
+    // Формируем результат с детальной статистикой по источникам
+    const sources = {};
+    allData.forEach(item => {
+        const sourceName = item.source || 'Unknown';
+        if (!sources[sourceName]) sources[sourceName] = 0;
+        sources[sourceName]++;
+    });
+
     const result = {
         total: unique.length,
         lastUpdate: new Date().toISOString(),
-        sources: {
-            fbi: allData.filter(d => d.source === 'FBI').length,
-            interpol: allData.filter(d => d.source === 'INTERPOL').length,
-            miamiJail: allData.filter(d => d.source === 'Miami-Dade Jail').length,
-            miamiSex: allData.filter(d => d.source === 'Miami-Dade Sex Offender Registry').length,
-            marshals: allData.filter(d => d.source === 'US Marshals').length,
-            europol: allData.filter(d => d.source === 'Europol').length
-        },
+        sources: sources,
         people: unique
     };
 
     saveEncrypted(DB_PATH, result);
-    console.log(`✅ База обновлена: ${result.total} РЕАЛЬНЫХ записей`);
-    console.log(`📊 Источники: FBI=${result.sources.fbi}, INTERPOL=${result.sources.interpol}, Miami Jail=${result.sources.miamiJail}, Miami Sex=${result.sources.miamiSex}, Marshals=${result.sources.marshals}, Europol=${result.sources.europol}`);
+    console.log(`✅ База обновлена: ${result.total} записей`);
+    console.log('📊 Источники:');
+    Object.entries(sources).forEach(([name, count]) => {
+        console.log(`   - ${name}: ${count} записей`);
+    });
 
     return result;
 }
